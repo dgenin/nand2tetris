@@ -50,9 +50,9 @@ class Parse:
         if self.command.startswith("@"):
             return "A_COMMAND"
         elif self.command.startswith("("):
-            return "L_COMMAMD"
+            return "L_COMMAND"
         elif (self.command.startswith("A") or self.command.startswith("D")
-                or self.command.startswith("M")):
+                or self.command.startswith("M")) or self.command.startswith("0"):
             return "C_COMMAND"
         else:
             print("Invalid command ", self.command, "on line ", self.line)
@@ -63,12 +63,14 @@ class Parse:
             try:
                 return int(self.command[1:])
             except ValueError:
-                if self.command.startswith("(") and self.command.find(")") > -1:
-                    return self.command[0:self.command.find(")")]
-                else:
-                    print("Label command without a closing ')'", self.command)
-                    return None
-        
+                return self.command[1:]
+                #print("Invalid @ literal ", self.command[1:], " on line ", self.line)
+            
+        elif self.command.startswith("(") and self.command.endswith(")"):
+            if self.command.find(")") == (len(self.command) - 1):
+                return self.command[1:-1]
+            else:
+                print("Invalid label ", self.command, "on line ", self.line)        
 
     def dest(self):
         if self.command.find("=") > -1:
@@ -98,8 +100,10 @@ class Parse:
 
 class Code:
     def dest(self, dst):
+        if dst is None:
+            return "000"
         code = ""
-        if dst.find("M") > -1:
+        if dst.find("A") > -1:
             code += "1"
         else:
             code += "0"
@@ -107,7 +111,7 @@ class Code:
             code += "1"
         else:
             code += "0"
-        if dst.find("A") > -1:
+        if dst.find("M") > -1:
             code += "1"
         else:
             code += "0"
@@ -145,9 +149,9 @@ class Code:
         elif op == "A+1":
             code += "110111"
         elif op == "D-1":
-            code += "011111"
+            code += "001110"
         elif op == "A-1":
-            code += "110111"
+            code += "110010"
         elif op == "D+A":
             code += "000010"
         elif op == "D-A":
@@ -180,9 +184,13 @@ class Code:
         elif jmp == "JMP":
             return "111"
 
-SymbolTable = {}
-
 def main(argv=sys.argv):
+
+    #setup predefined symbols
+    SymbolTable = {"SP":0, "LCL":1, "ARG":2, "THIS":3, "THAT":4, "SCREEN":16384, "KBD":24576}
+    for i in range(0,16):
+        SymbolTable["R"+str(i)] = i
+
     c = Code()
 
     if len(argv) != 2:
@@ -191,49 +199,52 @@ def main(argv=sys.argv):
     else:
         p = Parse(argv[1])
         
-    #Pass 1
     address = 0
     while(p.advance()):
+        #print(p.commandType())
         if p.commandType() == "L_COMMAND":
+            #print(p.symbol())
             SymbolTable[p.symbol()] = address
         else:
             address += 1
 
-    #Pass 2
+    #print(SymbolTable)
+
     p = Parse(argv[1])
     address = 16
     while(p.advance()):
+
         code = ""
-        print("line: "+str(p.line))
-        print(p.command)
-        print(p.commandType())
+        #print("line: "+str(p.line))
+        #print(p.command)
+        #print(p.commandType())
         if p.commandType() == "A_COMMAND":
             code += "0"
-            print(p.symbol())
-            if type(p.symbol()) is str:
-                if SymbolTable.get(p.symbol(), None) is not None:
-                    code += bin(SymbolTable[p.symbol()])[2:].zfill(15)
-                else:
-                    SymbolTable[p.symbol()] = address
-                    code += bin(address)[2:].zfill(15)
-                    address += 1
-            else:
+            #print(p.symbol())
+            if type(p.symbol()) is int:
                 code += bin(p.symbol())[2:].zfill(15)
+            elif SymbolTable.get(p.symbol()) is not None:
+                code += bin(SymbolTable[p.symbol()])[2:].zfill(15)
+            else:
+                code += bin(address)[2:].zfill(15)
+                SymbolTable[p.symbol()] = address
+                address += 1
         elif p.commandType() == "C_COMMAND":
             code += "111"
-            print(p.comp())
-            print(c.comp(p.comp()))
+            #print(p.comp())
+            #print(c.comp(p.comp()))
             code += c.comp(p.comp())
-            print(p.dest())
-            print(c.dest(p.dest()))
-            code += c.dest(p.dest())
-            print(p.jump())
-            print(c.jump(p.jump()))
-            code += c.jump(p.jump())
-        elif p.commandType() == "L_COMMAND":
-            print("Not implemented yet")
-        print(code)
 
-    
+            #print(p.dest())
+            #print(c.dest(p.dest()))
+            code += c.dest(p.dest())
+
+            #print(p.jump())
+            #print(c.jump(p.jump()))
+            code += c.jump(p.jump())
+        else:
+            continue
+        print(code)
+    #print(SymbolTable)
 
 main()
