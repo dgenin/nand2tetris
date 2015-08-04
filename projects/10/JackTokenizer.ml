@@ -45,6 +45,7 @@ exception LexerError ;;
    let lexer_char c = match c with 
        ' ' 
      | '\n' 
+     | '\r'
      | '\t'     -> forward cl ; lexer cl 
      | 'a'..'z' 
      | 'A'..'Z' -> Lident (extract_ident cl)
@@ -52,7 +53,9 @@ exception LexerError ;;
      | '"'      -> forward cl ; 
                    let res = Lstring (extract (fun st -> st.[0] <> '"') cl) 
                    in forward cl ; res 
-     | '+' | '-' | '*' | '&' | '|' | '!' | '=' | '(' | ')'  -> 
+     | '+' | '-' | '*' | '&' | '|' | '!' | '=' 
+     | '(' | ')' | ',' | ';' | '{' | '}' | '.'
+     | '[' | ']' -> 
                    forward cl; Lsymbol (String.make 1 c)
      | '<' 
      | '>'      -> forward cl; 
@@ -69,7 +72,7 @@ exception LexerError ;;
 		     let cs = cl.string.[cl.current]
 		     in match (c, cs) with
 			| ('/', '/') -> forward cl;
-					Lcomment (extract (fun st -> st.[0] <> '\n') cl)
+					Lcomment (extract (fun st -> st.[0] <> '\r') cl)
 			| ('/', '*') -> forward_n cl 2;
 				       let res = (Lcomment (extract (fun st -> (String.compare (String.sub st 0 2) "*/") != 0) cl))
 				       in forward_n cl 2; res
@@ -82,11 +85,17 @@ exception LexerError ;;
 
 let rec read_prog s =
   try
-    read_prog (s ^ input_line stdin)
+    let l = (s ^ (input_line stdin)) in read_prog l
   with
-    End_of_file -> print_string s;
-  s;;
+    End_of_file -> s;;
 
-let prog = read_prog ""
-in let l = init_lex prog in
-lexer l;;
+let rec lex_all cl = 
+  let lm = lexer cl in
+  match lm with
+    Lend -> None
+  | _    -> lexeme_print lm; lex_all cl;;
+
+let prog = (read_prog "")
+in let l = init_lex prog
+in lex_all l;;
+
