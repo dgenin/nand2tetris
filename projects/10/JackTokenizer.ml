@@ -1,4 +1,4 @@
-
+(* Lexeme type *)
 type lexeme = Lint of int
 	    | Lkeyword of string
 	    | Lident of string
@@ -16,54 +16,6 @@ let lexeme_print l = match l with
   | Lident s -> print_string ("<identifier>" ^ s ^ "</identifier>\n")
   | Lkeyword s -> print_string ("<keyword>" ^ s ^ "</keyword>\n")
   | Lend -> print_string "end\n";;
-
-type unr_op = UMINUS | NOT  ;;
-type bin_op = PLUS | MINUS | MULT | DIV
-             | EQUAL | LESS | GREAT | DIFF
-             | AND | OR  ;;
-type brace = LBRACE | RBRACE;;
-type brack = LBRACK | RBRACK ;;
-type paren = LPAREN | RPAREN ;;
-type const = TRUE | FALSE | NULL | THIS ;;
-
-type identifier = string;;
-
-type var_type = INT | CHAR | BOOLEAN | VOID | CLASS of identifier;;
-type var_scope = STATIC | FIELD;;
-type sub_type = CONSTRUCTOR | FUNCTION | METHOD;;
-
-type expression =
-  | Eint_const of int
-  | Estr_const of string
-  | Ekwd_const of const
-  | Eunr_exp of unr_op * expression
-  | Ebin_exp of expression * bin_op * expression
-  | Evar of identifier
-  | Earray_elem of identifier * int;;
-(*  | Efunc_call of identifier * expression list;;*)
-
-type ret_val = VAL of expression | None;;
-
-type statement =
-  | Slist of statement list
-  | Slet of identifier * expression
-  | Sif of expression * statement list * statement list
-  | Swhile of expression * statement list
-  | Sdo of identifier * expression list
-  | Sreturn of ret_val;;
-
-type declaration =
-  | Dclass of identifier * declaration list * declaration list
-  | Dclass_var of var_scope * var_type * identifier
-  | Dsub of sub_type * var_type * identifier * identifier list * declaration list * statement list
-  | Dsub_var of var_type * identifier list;;
-
-let declaration_print decl =
-  match decl with
-  | Dclass (class_name, class_vars, class_subs) -> print_string class_name
-  | Dclass_var (var_scope, var_type, var_name) -> print_string var_name
-  | _ -> print_string "whatever";;
-
 
 let init_lex s = { string=s; current=0; size=String.length s } ;;
 let forward cl = cl.current <- cl.current + 1 ;;
@@ -125,53 +77,136 @@ exception LexerError ;;
       if cl.current >= cl.size then Lend
       else lexer_char cl.string.[cl.current] ;;
 
+(* Read in the program text from stdin *)
 let rec read_prog s =
   try
     let l = (s ^ (input_line stdin)) in read_prog l
   with
     End_of_file -> s;;
 
+(* Lex the program *)
 let rec lex_all cl =
   let lm = lexer cl in
   match lm with
     Lend -> None
   | _    -> lexeme_print lm; lex_all cl;;
 
-(*let prog = (read_prog "")
+(* Test lexer
+
+let prog = (read_prog "")
 in let l = init_lex prog
 in lex_all l;;*)
 
-exception ParserError of string;;
-let rec parse_class_subs prog = [];;
+(*** Parser ***)
 
+type unr_op = UMINUS | NOT  ;;
+type bin_op = PLUS | MINUS | MULT | DIV
+             | EQUAL | LESS | GREAT | DIFF
+             | AND | OR  ;;
+type brace = LBRACE | RBRACE;;
+type brack = LBRACK | RBRACK ;;
+type paren = LPAREN | RPAREN ;;
+type const = TRUE | FALSE | NULL | THIS ;;
+
+type identifier = string;;
+
+type var_type = INT | CHAR | BOOLEAN | VOID | CLASS of identifier;;
+type var_scope = STATIC | FIELD;;
+type sub_type = CONSTRUCTOR | FUNCTION | METHOD;;
+
+type expression =
+  | Eint_const of int
+  | Estr_const of string
+  | Ekwd_const of const
+  | Eunr_exp of unr_op * expression
+  | Ebin_exp of expression * bin_op * expression
+  | Evar of identifier
+  | Earray_elem of identifier * int;;
+(*  | Efunc_call of identifier * expression list;;*)
+
+type ret_val = VAL of expression | None;;
+
+type statement =
+  | Slist of statement list
+  | Slet of identifier * expression
+  | Sif of expression * statement list * statement list
+  | Swhile of expression * statement list
+  | Sdo of identifier * expression list
+  | Sreturn of ret_val;;
+
+type declaration =
+  | Dclass of identifier * declaration list * declaration list
+  | Dclass_var of var_scope * var_type * identifier
+(* subroutine type, return type, subroutine name, parameter list, local variables, body *)
+  | Dsub of sub_type * var_type * identifier * identifier list * declaration list * statement list
+  | Dsub_var of var_type * identifier list;;
+
+let type_to_string t =
+  match t with
+    | INT -> "int"
+    | CHAR -> "char"
+    | BOOLEAN -> "boolean"
+    | VOID -> "void"
+    | CLASS c -> "class " ^ c;;
+
+let scope_to_string scope =
+  match scope with
+    | STATIC -> "static"
+    | FIELD -> "field";;
+
+let rec declaration_print decl =
+  match decl with
+  | Dclass (class_name, class_vars, class_subs) -> print_string ("Class: " ^ class_name ^ "\n");
+						   print_string "Class variables: \n";
+						   List.map declaration_print class_vars;
+						   print_string "\nClass subroutines\n";
+						   List.map declaration_print class_subs;
+						   print_string ""
+  | Dclass_var (var_scope, var_type, var_name) -> print_string (var_name ^ " " ^ (type_to_string var_type) ^ " " ^(scope_to_string var_scope) ^ "\n")
+  | _ -> print_string "whatever";;
+
+exception ParserError of string;;
+(* Parse the class subroutines *)
+
+(* Parse type *)
 let get_type token =
   match token with
     Lkeyword "int" -> INT |
     Lkeyword "char" -> CHAR |
     Lkeyword "boolean" -> BOOLEAN |
     Lident _ -> CLASS "test"
-    | _ -> raise (ParserError "");;
+    | _ -> lexeme_print token; raise (ParserError "Invalid type");;
 
+let rec parse_class_subs prog =
+  match (lexer prog) with
+  | Lkeyword "function" -> Dsub (FUNCTION, get_type (lexer prog),
+  | Lkeyword "method" -> Dsub (METHOD, get_type (lexer prog),
+  | Lkeyword "constructor" -> Dsub (CONSTRUCTOR, get_type (lexer prog),
+;;
+
+
+(* Parse class variable declarations *)
 let rec parse_class_vars prog var_defs =
   let get_scope token = match token with Lkeyword "static" -> STATIC | Lkeyword "field" -> FIELD | _ -> raise (ParserError "")
   in let rec get_name prog names = match (lexer prog) with
 	Lident name -> get_name prog (name::names)
       | Lsymbol "," -> get_name prog names
       | Lsymbol ";" -> names
-      | _ -> raise (ParserError "")
+      | _ -> raise (ParserError "Syntax error in class variable declaration")
   in
   match (lexer prog) with
-    ((Lkeyword "static") as t) | ((Lkeyword "field") as t) -> let vscope = get_scope t and vtype = get_type (lexer prog) in parse_class_vars prog (List.concat [var_defs;(List.map (fun name -> Dclass_var (vscope, vtype, name)) (get_name prog []))])
+    ((Lkeyword "static") as t) | ((Lkeyword "field") as t) -> let vscope = get_scope t and vtype = get_type (lexer prog)
+							      in parse_class_vars prog (List.concat [var_defs;(List.map (fun name -> Dclass_var (vscope, vtype, name)) (get_name prog []))])
     | Lkeyword _ -> var_defs
-    | _ -> raise (ParserError "");;
+    | Lcomment _ -> parse_class_vars prog var_defs
+    | _ as l -> lexeme_print l; raise (ParserError "Syntax error in class variables declaration");;
 
 let parse_class prog =
   match (lexer prog) with
     Lident class_name -> (match (lexer prog) with
 			    Lsymbol "{" -> Dclass (class_name, (parse_class_vars prog []), (parse_class_subs prog))
 			  | _ -> raise (ParserError ""))
-  | _ -> raise (ParserError "");;
-
+  | _ -> raise (ParserError "Syntax error in class declaration");;
 
 let rec parse prog =
   let token = lexer prog in
