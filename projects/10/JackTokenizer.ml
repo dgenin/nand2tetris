@@ -54,12 +54,12 @@ exception LexerError ;;
 			| _ -> Lident ident)
      | '0'..'9' -> Lint (extract_int cl)
      | '"'      -> forward cl ;
-                   let res = Lstring (extract (fun st -> st.[0] <> '"') cl)
-                   in forward cl ; res
+		   let res = Lstring (extract (fun st -> st.[0] <> '"') cl)
+		   in forward cl ; res
      | '+' | '-' | '*' | '&' | '|' | '!' | '='
      | '(' | ')' | ',' | ';' | '{' | '}' | '.'
      | '[' | ']' | '<' | '>' ->
-                   forward cl; Lsymbol (String.make 1 c)
+		   forward cl; Lsymbol (String.make 1 c)
      | '/'      -> forward cl;
 		   if cl.current >= cl.size then Lsymbol (String.make 1 c)
 		   else (
@@ -101,8 +101,8 @@ in lex_all l;;*)
 
 type unr_op = UMINUS | NOT  ;;
 type bin_op = PLUS | MINUS | MULT | DIV
-             | EQUAL | LESS | GREAT | DIFF
-             | AND | OR  ;;
+	     | EQUAL | LESS | GREAT | DIFF
+	     | AND | OR  ;;
 type brace = LBRACE | RBRACE;;
 type brack = LBRACK | RBRACK ;;
 type paren = LPAREN | RPAREN ;;
@@ -168,7 +168,7 @@ let rec declaration_print decl =
 exception ParserError of string;;
 (* Parse the class subroutines *)
 
-(* Parse type *)
+(* translate type keyword to type type*)
 let get_type token =
   match token with
     Lkeyword "int" -> INT |
@@ -177,30 +177,42 @@ let get_type token =
     Lident _ -> CLASS "test"
     | _ -> lexeme_print token; raise (ParserError "Invalid type");;
 
+(* Parse class subroutine definitions *)
 let rec parse_class_subs prog =
-  match (lexer prog) with
+[Dsub(FUNCTION, INT, "test", [], [], [])]
+(*  match (lexer prog) with
   | Lkeyword "function" -> Dsub (FUNCTION, get_type (lexer prog),
   | Lkeyword "method" -> Dsub (METHOD, get_type (lexer prog),
-  | Lkeyword "constructor" -> Dsub (CONSTRUCTOR, get_type (lexer prog),
+  | Lkeyword "constructor" -> Dsub (CONSTRUCTOR, get_type (lexer prog),*)
 ;;
 
 
 (* Parse class variable declarations *)
 let rec parse_class_vars prog var_defs =
-  let get_scope token = match token with Lkeyword "static" -> STATIC | Lkeyword "field" -> FIELD | _ -> raise (ParserError "")
-  in let rec get_name prog names = match (lexer prog) with
+  (* translate scope keyword into scope type*)
+  let get_scope token = match token with
+      Lkeyword "static" -> Some STATIC
+    | Lkeyword "field" -> Some FIELD
+    | _ -> None in
+  (* parse the list of variable names *)
+  let rec get_name prog names = match (lexer prog) with
 	Lident name -> get_name prog (name::names)
       | Lsymbol "," -> get_name prog names
       | Lsymbol ";" -> names
-      | _ -> raise (ParserError "Syntax error in class variable declaration")
-  in
+      | _ -> raise (ParserError "Syntax error in class variable declaration") and
+  (* save current lexer position in case we have to back track *)
+  prev_pos = prog.current in
   match (lexer prog) with
-    ((Lkeyword "static") as t) | ((Lkeyword "field") as t) -> let vscope = get_scope t and vtype = get_type (lexer prog)
-							      in parse_class_vars prog (List.concat [var_defs;(List.map (fun name -> Dclass_var (vscope, vtype, name)) (get_name prog []))])
-    | Lkeyword _ -> var_defs
-    | Lcomment _ -> parse_class_vars prog var_defs
-    | _ as l -> lexeme_print l; raise (ParserError "Syntax error in class variables declaration");;
+    Lcomment _ -> parse_class_vars prog var_defs
+  | _ as t -> match (get_scope t) with
+	   (* if the token is a scope definition this is a variable declaration *)
+	   | Some (STATIC | FIELD as vscope) -> let vtype = get_type (lexer prog) in
+						let more_vars = List.map (fun name -> Dclass_var (vscope, vtype, name)) (get_name prog [])
+						in parse_class_vars prog (List.concat [var_defs; more_vars])
+	   (* otherwise, we are done with class variable declaration block, so rewind the lexer for the token to be read again *)
+	   | None -> prog.current <- prev_pos; var_defs;;
 
+(* Parse class definition *)
 let parse_class prog =
   match (lexer prog) with
     Lident class_name -> (match (lexer prog) with
