@@ -138,16 +138,25 @@ type declaration =
   | Dclass of identifier * declaration list * declaration list
   | Dclass_var of var_scope * var_type * identifier
 (* subroutine type, return type, subroutine name, parameter list, local variables, body *)
-  | Dsub of sub_type * var_type * identifier * identifier list * declaration list * statement list
-  | Dsub_var of var_type * identifier list;;
+  | Dsub of sub_type * var_type * identifier * declaration list * declaration list * statement list
+  | Dsub_var of var_type * identifier
+  | Dsub_param of var_type * identifier
+  | Dempty;;
+  
 
 let type_to_string t =
   match t with
-    | INT -> "int"
-    | CHAR -> "char"
-    | BOOLEAN -> "boolean"
-    | VOID -> "void"
-    | CLASS c -> "class " ^ c;;
+    INT -> "int"
+  | CHAR -> "char"
+  | BOOLEAN -> "boolean"
+  | VOID -> "void"
+  | CLASS c -> "class " ^ c;;
+
+let sub_type_to_string t =
+  match t with
+    FUNCTION -> "function"
+  | METHOD -> "method"
+  | CONSTRUCTOR -> "constructor";;
 
 let scope_to_string scope =
   match scope with
@@ -156,13 +165,21 @@ let scope_to_string scope =
 
 let rec declaration_print decl =
   match decl with
-  | Dclass (class_name, class_vars, class_subs) -> print_string ("Class: " ^ class_name ^ "\n");
-						   print_string "Class variables: \n";
-						   List.map declaration_print class_vars;
-						   print_string "\nClass subroutines\n";
-						   List.map declaration_print class_subs;
-						   print_string ""
+  | Dclass (class_name, class_vars, class_subs) ->
+     print_string ("Class: " ^ class_name ^ "\n");
+     print_string "Class variables: \n";
+     List.map declaration_print class_vars;
+     print_string "\nClass subroutines\n";
+     List.map declaration_print class_subs;
+     print_string ""
   | Dclass_var (var_scope, var_type, var_name) -> print_string (var_name ^ " " ^ (type_to_string var_type) ^ " " ^(scope_to_string var_scope) ^ "\n")
+  | Dsub_param (var_type, var_name) -> print_string ((type_to_string var_type) ^ " " ^ var_name)
+  | Dsub (sub_type, ret_type, sub_name, param_list, var_list, body) -> 
+     print_string ("Subroutine: " ^ sub_name ^ "\n");
+     print_string ((sub_type_to_string sub_type) ^ " " ^ (type_to_string ret_type));
+								       let _ = List.map declaration_print param_list in
+								       let _ = List.map declaration_print var_list in
+								       print_string "end sub declaration"
   | _ -> print_string "whatever";;
 
 exception ParserError of string;;
@@ -171,19 +188,68 @@ exception ParserError of string;;
 (* translate type keyword to type type*)
 let get_type token =
   match token with
-    Lkeyword "int" -> INT |
-    Lkeyword "char" -> CHAR |
-    Lkeyword "boolean" -> BOOLEAN |
-    Lident _ -> CLASS "test"
-    | _ -> lexeme_print token; raise (ParserError "Invalid type");;
+    Lkeyword "int" -> INT
+  | Lkeyword "char" -> CHAR
+  | Lkeyword "boolean" -> BOOLEAN
+  | Lkeyword "void" -> VOID
+  | Lident _ -> CLASS "test"
+  | _ -> lexeme_print token; raise (ParserError "Invalid type");;
+
+let get_ident token =
+  match token with
+    Lident ident -> ident
+  | _ as t -> lexeme_print t; raise (ParserError "Invalid identifier");; 
+
+(* Parse subroutine params *)
+let parse_sub_params prog =
+  (* reads subroutine parameters, including the closing parenthesis *)
+  let rec get_params prog param_defs =
+    match (lexer prog) with
+      Lsymbol ")" -> param_defs
+    | Lsymbol "," -> get_params prog param_defs
+    | Lcomment _ -> raise (ParserError "Comments not supported in parameter declaration lists")
+    | Lkeyword _ as t -> let param_type = get_type t in
+			 let param_name = get_ident (lexer prog) in
+			 match (lexer prog) with
+			   Lsymbol ")" -> List.concat [param_defs; [Dsub_param (param_type, param_name)]]
+			 | Lsymbol "," -> get_params prog (List.concat [param_defs; [Dsub_param (param_type, param_name)]])
+			 | _ as t -> lexeme_print t; raise (ParserError "Invalid token in subroutine parameter declaration")
+  in
+  match (lexer prog) with
+    Lsymbol "(" -> get_params prog []
+  | _ as t -> lexeme_print t; raise (ParserError "Missing open parenthesis in subroutine parameter declaration");;
+
+(* Parse subroutine variables *)
+let rec parse_sub_vars prog var_defs =
+  (* parse the list of variable names *)
+  let rec get_name prog names = match (lexer prog) with
+	Lident name -> get_name prog (name::names)
+      | Lsymbol "," -> get_name prog names
+      | Lsymbol ";" -> names
+      | _ as t -> lexeme_print t; raise (ParserError "Syntax error in subroutine variable declaration") and
+  prev_pos = prog.current in
+  match (lexer prog) with
+    Lcomment _ -> parse_sub_vars prog var_defs
+  | Lkeyword "var" -> let vtype = get_type (lexer prog) in
+		      let more_vars = List.map (fun name -> Dsub_var (vtype, name)) (get_name prog [])
+		      in parse_sub_vars prog (List.concat [var_defs; more_vars])
+  | _ -> prog.current <- prev_pos; var_defs;; 
 
 (* Parse class subroutine definitions *)
 let rec parse_class_subs prog =
-[Dsub(FUNCTION, INT, "test", [], [], [])]
-(*  match (lexer prog) with
-  | Lkeyword "function" -> Dsub (FUNCTION, get_type (lexer prog),
-  | Lkeyword "method" -> Dsub (METHOD, get_type (lexer prog),
-  | Lkeyword "constructor" -> Dsub (CONSTRUCTOR, get_type (lexer prog),*)
+  match (lexer prog) with
+    Lkeyword "function" -> let ret_type = get_type (lexer prog) in
+			   let fun_name = get_ident (lexer prog) in
+			   let fun_params = parse_sub_params prog in
+			   let fun_vars = parse_sub_vars prog [] in
+			   [Dsub (FUNCTION, ret_type, fun_name, fun_params, fun_vars, [])]
+  | Lkeyword "method" -> [Dsub (METHOD, get_type (lexer prog), get_ident (lexer prog), parse_sub_params prog, parse_sub_vars prog [], [])]
+  | Lkeyword "constructor" -> let ret_type = get_type (lexer prog) in
+			      let con_name = get_ident (lexer prog) in
+			      let con_params = parse_sub_params prog in
+			      let con_vars = parse_sub_vars prog [] in
+			      [Dsub (CONSTRUCTOR, ret_type, con_name, con_params, con_vars, [])]
+  | _ -> []
 ;;
 
 
@@ -216,7 +282,7 @@ let rec parse_class_vars prog var_defs =
 let parse_class prog =
   match (lexer prog) with
     Lident class_name -> (match (lexer prog) with
-			    Lsymbol "{" -> Dclass (class_name, (parse_class_vars prog []), (parse_class_subs prog))
+			    Lsymbol "{" -> List.map declaration_print (parse_class_vars prog []); Dclass (class_name, (parse_class_vars prog []), (parse_class_subs prog))
 			  | _ -> raise (ParserError ""))
   | _ -> raise (ParserError "Syntax error in class declaration");;
 
