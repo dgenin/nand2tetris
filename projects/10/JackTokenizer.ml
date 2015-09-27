@@ -22,7 +22,7 @@ let forward cl = cl.current <- cl.current + 1 ;;
 let forward_n cl n = cl.current <- cl.current + n ;;
 let extract pred cl =
   let st = cl.string and pos = cl.current in
-  let rec ext n = if n < cl.si+ze && (pred (String.sub st n (cl.size - n))) then ext (n + 1) else n in
+  let rec ext n = if n < cl.size && (pred (String.sub st n (cl.size - n))) then ext (n + 1) else n in
   let res = ext pos
   in cl.current <- res ; String.sub cl.string pos (res - pos) ;;
 
@@ -178,9 +178,9 @@ let rec declaration_print decl =
      print_string ("Subroutine: " ^ sub_name ^ "\n");
      print_string ("Scope: " ^ (sub_type_to_string sub_type) ^ "\n");
      print_string ("Returns: " ^ (type_to_string ret_type) ^ "\n");
-     print_string ("Params: ")
-     let _ = List.map declaration_print param_list in
-     let _ = List.map declaration_print var_list in
+     print_string ("Params: ");
+     List.map declaration_print param_list;
+     List.map declaration_print var_list;
      print_string "end sub declaration"
   | _ -> print_string "whatever";;
 
