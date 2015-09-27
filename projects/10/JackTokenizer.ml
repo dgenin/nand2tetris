@@ -50,7 +50,8 @@ exception LexerError ;;
 			| "int" | "char" | "boolean"
 			| "void" | "true" | "false"
 			| "null" | "this" | "if " | "else"
-			| "while" | "return" -> Lkeyword ident
+			| "while" | "return" | "var" | "let"
+			| "do" -> Lkeyword ident
 			| _ -> Lident ident)
      | '0'..'9' -> Lint (extract_int cl)
      | '"'      -> forward cl ;
@@ -142,7 +143,7 @@ type declaration =
   | Dsub_var of var_type * identifier
   | Dsub_param of var_type * identifier
   | Dempty;;
-  
+
 
 let type_to_string t =
   match t with
@@ -174,14 +175,14 @@ let rec declaration_print decl =
      print_string ""
   | Dclass_var (var_scope, var_type, var_name) -> print_string (var_name ^ " " ^ (type_to_string var_type) ^ " " ^(scope_to_string var_scope) ^ "\n")
   | Dsub_param (var_type, var_name) -> print_string ((type_to_string var_type) ^ " " ^ var_name ^ " ")
-  | Dsub (sub_type, ret_type, sub_name, param_list, var_list, body) -> 
+  | Dsub (sub_type, ret_type, sub_name, param_list, var_list, body) ->
      print_string ("Subroutine: " ^ sub_name ^ "\n");
      print_string ("Scope: " ^ (sub_type_to_string sub_type) ^ "\n");
      print_string ("Returns: " ^ (type_to_string ret_type) ^ "\n");
      print_string ("Params: ");
      List.map declaration_print param_list;
      List.map declaration_print var_list;
-     print_string "end sub declaration"
+     print_string "\n"
   | _ -> print_string "whatever";;
 
 exception ParserError of string;;
@@ -200,7 +201,7 @@ let get_type token =
 let get_ident token =
   match token with
     Lident ident -> ident
-  | _ as t -> lexeme_print t; raise (ParserError "Invalid identifier");; 
+  | _ as t -> lexeme_print t; raise (ParserError "Invalid identifier");;
 
 (* Parse subroutine params *)
 let parse_sub_params prog =
@@ -230,12 +231,56 @@ let rec parse_sub_vars prog var_defs =
       | Lsymbol ";" -> names
       | _ as t -> lexeme_print t; raise (ParserError "Syntax error in subroutine variable declaration") and
   prev_pos = prog.current in
+  print_string "parsing local variables\n";
   match (lexer prog) with
     Lcomment _ -> parse_sub_vars prog var_defs
   | Lkeyword "var" -> let vtype = get_type (lexer prog) in
 		      let more_vars = List.map (fun name -> Dsub_var (vtype, name)) (get_name prog [])
-		      in parse_sub_vars prog (List.concat [var_defs; more_vars])
-  | _ -> prog.current <- prev_pos; var_defs;; 
+		      in print_string "var keyword\n"; parse_sub_vars prog (List.concat [var_defs; more_vars])
+  | _ as l -> lexeme_print l; prog.current <- prev_pos; var_defs
+;;
+
+(* Parse subroutine statements *)
+let rec parse_if_statement prog statements = statements
+and parse_let_statement prog statements =
+  match (lexer prog) with
+    Lcomment _ -> parse_let_statement prog statements
+  | Lsymbol ";" -> statements
+  | Lend -> raise (ParserError "Reached end of file in let\n")
+  | _ -> parse_let_statement prog statements
+and parse_while_statement prog statements =
+  match (lexer prog) with
+    Lcomment _ -> parse_while_statement prog statements
+  | Lsymbol "{" -> print_string "while {"; (match (lexer prog) with
+		     Lcomment _ -> parse_let_statement prog statements
+		   | Lsymbol "}" -> statements
+		   | Lend -> raise (ParserError "Reached end of file in let\n")
+		   | _ -> parse_sub_statements prog statements)
+  | _ -> parse_while_statement prog statements
+and  parse_do_statement prog statements = statements
+and  parse_return_statement prog statements = statements
+and  parse_sub_statements prog statements =
+  match (lexer prog) with
+    Lcomment _ -> parse_sub_statements prog statements
+  | Lkeyword "if" -> print_string "if\n"; parse_sub_statements prog (List.concat [statements; parse_if_statement prog statements])
+  | Lkeyword "let" -> print_string "let\n"; parse_sub_statements prog ( List.concat [statements; parse_let_statement prog statements])
+  | Lkeyword "while" -> print_string "while\n"; parse_sub_statements prog ( List.concat [statements; parse_while_statement prog statements])
+  | Lkeyword "do" -> print_string "do\n"; parse_sub_statements prog ( List.concat [statements; parse_do_statement prog statements])
+  | Lkeyword "return" -> print_string "return\n"; parse_sub_statements prog ( List.concat [statements; parse_return_statement prog statements])
+  | Lsymbol "}" -> print_string "}\n"; statements
+  | Lend -> raise (ParserError "Missing } in function\n")
+  | _ as t -> print_string "parse_sub_statements: "; lexeme_print t; []
+;;
+
+(* Parses subroutine body *)
+let rec parse_sub_body prog =
+  match (lexer prog) with
+    Lcomment _ -> parse_sub_body prog
+  | Lsymbol "{" -> let vars = parse_sub_vars prog [] in
+		   let statements = parse_sub_statements prog [] in
+		   (vars, statements)
+  | _ -> raise (ParserError "Missing { in function body\n")
+;;
 
 (* Parse class subroutine definitions *)
 let rec parse_class_subs prog =
@@ -243,7 +288,7 @@ let rec parse_class_subs prog =
     Lkeyword "function" -> let ret_type = get_type (lexer prog) in
 			   let fun_name = get_ident (lexer prog) in
 			   let fun_params = parse_sub_params prog in
-			   let fun_vars = parse_sub_vars prog [] in
+			   let (fun_vars, fun_statements) = parse_sub_body prog in
 			   [Dsub (FUNCTION, ret_type, fun_name, fun_params, fun_vars, [])]
   | Lkeyword "method" -> [Dsub (METHOD, get_type (lexer prog), get_ident (lexer prog), parse_sub_params prog, parse_sub_vars prog [], [])]
   | Lkeyword "constructor" -> let ret_type = get_type (lexer prog) in
