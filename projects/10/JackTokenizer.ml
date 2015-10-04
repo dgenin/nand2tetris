@@ -26,51 +26,6 @@ let extract pred cl =
   let res = ext pos
   in cl.current <- res ; String.sub cl.string pos (res - pos) ;;
 
-(* Extracts a code block delimited by {}, which may contain other blocks *)
-let extract_code_block cl =
-  let st = cl.string in 
-  let rec rec_extract_block n =
-    let rec ext n =
-      if n < cl.size then
-	match (String.get st n) with 
-	  '{' -> ext (rec_extract_block n)
-	| '}' -> n + 1
-	| _ -> ext (n + 1)
-      else raise (ParserError "Unmatched \"{\"") in
-    match (String.get st n) with
-      '{' -> ext (n + 1)
-    | _  -> raise (ParserError "extract_block called on buffer not starting with \"{\"") in
-  init_lex (String.sub st cl.current (rec_extract_block cl.current));;
-
-(* Same as above but uses lexer to walk the program text.
-   Looks uglier because it relies on side-effect from lexer operation *)
-let extract_code_block cl =
-  let pos = cl.current in
-  let rec rec_extract_block =
-    let rec ext = 
-      match (lexer cl) with
-	Lsymbol "{" -> rec_extract_block; ext
-      | Lsymbol "}" -> cl.current
-      | _ -> ext in
-    match (lexer cl) with
-      Lsymbol '{' -> ext
-    | _ -> raise (ParserError "extract_block called on buffer not starting with \"{\"") in
-  rec_extract_block pos;
-  init_lex (String.sub cl.string pos cl.current);
-  cl.current <- pos;;
-      
-
-(* Extract class vars block *)
-(*let extract_class_vars cl =
-  let st = cl.string in
-  let rec rec_extract_class_vars n =
-    let rec ext =
-      match (lexer cl) with
-	Lkeyword "field" | "static" | "int" | "char" | "boolean" -> ext
-	| Lidentifier -> ext
-	| 
- *)
-
 let extract_int =
   let is_int = function st -> match st.[0] with '0'..'9' -> true | _ -> false
   in function cl -> int_of_string (extract is_int cl) ;;
@@ -122,6 +77,74 @@ exception LexerError ;;
    in
       if cl.current >= cl.size then Lend
       else lexer_char cl.string.[cl.current] ;;
+
+(*** Recursive lexer ***)
+ type Transition = Lexeme * Int;
+ type State = Transition list;
+ type StateMachine = State list;
+
+ let scanner sm cl =
+   let next_lexeme = lexer cl (* ??? *) in
+   let rec match_state state lexeme =
+     match state with
+       (l, i)::rest -> (match l with 
+			  lexeme -> i
+			| _ -> match_state rest lexeme) 
+     | [] -> print_string "Syntax error!!!"; -1 in 
+   let rec rec_scanner sm state tokens =
+     let lexeme = next_lexeme() in
+     let next_state = match_state state lexeme in
+     (match next_state with
+	-1 -> raise LexerError
+      | (List.length sm) -> tokens
+      | _ -> tokens::lexeme);
+     rec_scanner sm next_state tokens in
+   rec_scanner sm 0 [];;
+			      
+
+(* Extracts a code block delimited by {}, which may contain other blocks *)
+let extract_code_block cl =
+  let st = cl.string in 
+  let rec rec_extract_block n =
+    let rec ext n =
+      if n < cl.size then
+	match (String.get st n) with 
+	  '{' -> ext (rec_extract_block n)
+	| '}' -> n + 1
+	| _ -> ext (n + 1)
+      else raise (ParserError "Unmatched \"{\"") in
+    match (String.get st n) with
+      '{' -> ext (n + 1)
+    | _  -> raise (ParserError "extract_block called on buffer not starting with \"{\"") in
+  init_lex (String.sub st cl.current (rec_extract_block cl.current));;
+
+(* Same as above but uses lexer to walk the program text.
+   Looks uglier because it relies on side-effect from lexer operation *)
+let extract_code_block cl =
+  let pos = cl.current in
+  let rec rec_extract_block =
+    let rec ext = 
+      match (lexer cl) with
+	Lsymbol "{" -> rec_extract_block; ext
+      | Lsymbol "}" -> cl.current
+      | _ -> ext in
+    match (lexer cl) with
+      Lsymbol '{' -> ext
+    | _ -> raise (ParserError "extract_block called on buffer not starting with \"{\"") in
+  rec_extract_block pos;
+  init_lex (String.sub cl.string pos cl.current);
+  cl.current <- pos;;
+      
+
+(* Extract class vars block *)
+let extract_class_vars cl =
+  let st = cl.string in
+  let rec rec_extract_class_vars n =
+    let rec ext tokens =
+      match (lexer cl) with
+	Lkeyword "field" | "static" | "int" | "char" | "boolean" as t -> ext tokens::t
+	| Lidentifier -> ext tokens::t
+	| 
 
 (* Read in the program text from stdin *)
 let rec read_prog s =
