@@ -5,7 +5,8 @@ type lexeme = Lint of int
 	    | Lsymbol of string
 	    | Lstring of string
 	    | Lcomment of string
-	    | Lend ;;
+	    | Lend
+      | Lany;;
 type string_lexer = {string:string; mutable current:int; size:int } ;;
 
 let lexeme_print l = match l with
@@ -79,28 +80,32 @@ exception LexerError ;;
       else lexer_char cl.string.[cl.current] ;;
 
 (*** Recursive lexer ***)
- type Transition = Lexeme * Int;
- type State = Transition list;
- type StateMachine = State list;
+ type transition = lexeme * int;;
+ type state = transition list;;
+ type state_machine = state list;;
 
  let scanner sm cl =
-   let next_lexeme = lexer cl (* ??? *) in
+   let next_lexeme() = lexer cl (* ??? *) in
    let rec match_state state lexeme =
      match state with
-       (l, i)::rest -> (match l with 
-			  lexeme -> i
-			| _ -> match_state rest lexeme) 
+       (l, i)::rest -> (
+          match l with
+             Lany -> i
+			     | lexeme -> i
+			     | _ -> match_state rest lexeme) 
      | [] -> print_string "Syntax error!!!"; -1 in 
    let rec rec_scanner sm state tokens =
      let lexeme = next_lexeme() in
      let next_state = match_state state lexeme in
-     (match next_state with
-	-1 -> raise LexerError
-      | (List.length sm) -> tokens
-      | _ -> tokens::lexeme);
-     rec_scanner sm next_state tokens in
-   rec_scanner sm 0 [];;
+     match next_state with
+        -1 -> raise LexerError
+      | n when n = (List.length sm) -> tokens
+      | _ -> rec_scanner [] [] [];
+      (* | _ -> rec_scanner sm (List.nth sm next_state) tokens::lexeme; *)
+   in rec_scanner sm [(Lsymbol("{"), 1)] [];;
 			      
+exception ParserError of string;;
+(* Parse the class subroutines *)
 
 (* Extracts a code block delimited by {}, which may contain other blocks *)
 let extract_code_block cl =
@@ -120,7 +125,7 @@ let extract_code_block cl =
 
 (* Same as above but uses lexer to walk the program text.
    Looks uglier because it relies on side-effect from lexer operation *)
-let extract_code_block cl =
+(*let extract_code_block cl =
   let pos = cl.current in
   let rec rec_extract_block =
     let rec ext = 
@@ -129,22 +134,22 @@ let extract_code_block cl =
       | Lsymbol "}" -> cl.current
       | _ -> ext in
     match (lexer cl) with
-      Lsymbol '{' -> ext
+      Lsymbol "{" -> ext
     | _ -> raise (ParserError "extract_block called on buffer not starting with \"{\"") in
   rec_extract_block pos;
-  init_lex (String.sub cl.string pos cl.current);
-  cl.current <- pos;;
+  init_lex(String.sub cl.string pos cl.current);
+  cl.current <- pos;;*)
       
 
 (* Extract class vars block *)
-let extract_class_vars cl =
+(*let extract_class_vars cl =
   let st = cl.string in
   let rec rec_extract_class_vars n =
     let rec ext tokens =
       match (lexer cl) with
 	Lkeyword "field" | "static" | "int" | "char" | "boolean" as t -> ext tokens::t
 	| Lidentifier -> ext tokens::t
-	| 
+	| _ -> tokens dummy, fix it *);;
 
 (* Read in the program text from stdin *)
 let rec read_prog s =
@@ -253,8 +258,6 @@ let rec declaration_print decl =
      print_string "\n"
   | _ -> print_string "whatever";;
 
-exception ParserError of string;;
-(* Parse the class subroutines *)
 
 (* translate type keyword to type type*)
 let get_type token =
@@ -413,4 +416,6 @@ let rec parse prog =
 
 let prog = (read_prog "")
 in let l = init_lex prog
-in declaration_print (parse l);;
+(* in declaration_print (parse l);; *)
+in scanner [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] l
+  
