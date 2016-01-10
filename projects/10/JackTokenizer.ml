@@ -421,7 +421,8 @@ let rec parse prog =
   | Lcomment _ -> parse prog
   | _ -> raise (ParserError "Unexpected statement at top level");;
 
-let prog = (read_prog "")
-in let l = init_lex prog
+let prog = (read_prog "") in
+let l = init_lex prog in
 (* in declaration_print (parse l);; *)
-in scanner [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] l
+let state_machine = [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] in
+scanner state_machine l
