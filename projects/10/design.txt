@@ -2,8 +2,16 @@ Overall
 =======
 
 The main program is read from stdin.
-The program is then passed to init_lex which initializes the lexer
-The lexer is then passed to the scanner which is the main part of the compiler.
+The program is then passed to init_lex which initializes the lexeThe lexer is then passed to the scanner which is the main part of the compiler.
 
 Scanner
 --------
+Takes a statemachine and a lexer as arguments.
+
+It then obtains lexemes from the lexer and then moves through the state machine using the lexeme as the transition.
+
+As it is doing that, it accumulates lexemes into a token list, which it then returns at the end.
+
+The state machine traversal automatically catches errors when invalid transitions are encountered.
+
+To handle Lident, we need to defined a function that splits a Lexeme into the Lexeme type and the Lexeme value (e.g., Lident("foo") would be split into Lident and "foo", while Lend would be split into Lend and None)

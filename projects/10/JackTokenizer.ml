@@ -424,5 +424,13 @@ let rec parse prog =
 let prog = (read_prog "") in
 let l = init_lex prog in
 (* in declaration_print (parse l);; *)
-let state_machine = [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] in
+(* let state_machine = [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] in *)
+let state_machine = [[(Lsymbol("{"), 1)]; 
+                     [(Lkeyword("static"), 2);(Lsymbol("}"),5); (Lany,1)]; 
+                     [(Lkeyword("char"),3); (Lkeyword("int"), 3); (Lkeyword("boolean"), 3); (Lkeyword("void"), 3)];
+                     (* [(Lident, 4)]; *)
+                     [(Lany, 4)];
+                     [(Lsymbol(","),3); (Lsymbol(";"),1)];
+                     [(Lsymbol("}"),2)];
+                    ]; in
 scanner state_machine l
