@@ -1,0 +1,15 @@
+/* foo */
+{
+    ;
+}
+
+{
+    static int y;
+}
+/* test */
+class Foo {
+      static int x, y, z;
+      /* comment */
+      madsfasd
+      field char u, v, w;
+}

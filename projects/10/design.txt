@@ -1,0 +1,9 @@
+Overall
+=======
+
+The main program is read from stdin.
+The program is then passed to init_lex which initializes the lexer
+The lexer is then passed to the scanner which is the main part of the compiler.
+
+Scanner
+--------

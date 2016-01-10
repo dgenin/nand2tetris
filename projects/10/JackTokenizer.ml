@@ -87,8 +87,9 @@ exception LexerError ;;
  let scanner sm cl =
    let next_lexeme() = lexer cl (* ??? *) in
    let rec match_state state lexeme =
+     lexeme_print lexeme;
      match state with
-       (l, i)::rest -> (
+       (l, i)::rest -> ( lexeme_print l; print_int i; print_string " ";
           match l with
              Lany -> i
 			     | lexeme -> i
@@ -97,15 +98,21 @@ exception LexerError ;;
    let rec rec_scanner sm state tokens =
      let lexeme = next_lexeme() in
      let next_state = match_state state lexeme in
+     print_int next_state; print_string " ";
      match next_state with
         -1 -> raise LexerError
       | n when n = (List.length sm) -> tokens
-      | _ -> rec_scanner [] [] [];
-      (* | _ -> rec_scanner sm (List.nth sm next_state) tokens::lexeme; *)
+      (* | _ -> rec_scanner [] [] []; *)
+      | _ -> rec_scanner sm (List.nth sm next_state) (List.append tokens [lexeme]);
    in rec_scanner sm [(Lsymbol("{"), 1)] [];;
 			      
 exception ParserError of string;;
 (* Parse the class subroutines *)
+
+
+(* Print state *)
+let print_state state =
+  None;;
 
 (* Extracts a code block delimited by {}, which may contain other blocks *)
 let extract_code_block cl =
@@ -149,7 +156,7 @@ let extract_code_block cl =
       match (lexer cl) with
 	Lkeyword "field" | "static" | "int" | "char" | "boolean" as t -> ext tokens::t
 	| Lidentifier -> ext tokens::t
-	| _ -> tokens dummy, fix it *);;
+	| _ -> tokens dummy, fix it *);; 
 
 (* Read in the program text from stdin *)
 let rec read_prog s =
@@ -418,4 +425,3 @@ let prog = (read_prog "")
 in let l = init_lex prog
 (* in declaration_print (parse l);; *)
 in scanner [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] l
-  
