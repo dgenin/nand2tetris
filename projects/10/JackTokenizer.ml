@@ -10,10 +10,9 @@ type lexeme = Lint of int
 
 type string_lexer = {string:string; mutable current:int; size:int } ;;
 
-let lexeme_trans l = match l with
-    (Lident _) -> (Lident "*")
-  | t -> t;;
-
+let lexeme_type l = match l with
+    (Lident _) -> (Lident "")
+  | t -> t
 
 let lexeme_print l = match l with
     Lint i -> print_string ("<int>" ^ (string_of_int i) ^ "</int> ")
