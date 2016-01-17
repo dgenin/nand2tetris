@@ -86,58 +86,55 @@ exception LexerError ;;
       else lexer_char cl.string.[cl.current] ;;
 
 (*** Recursive lexer ***)
- type transition = lexeme * int;;
- type state = transition list;;
- type state_machine = state list;;
+type transition = lexeme * int;;
+type state = transition list;;
+type state_machine = state list;;
 
-let rec print_state s =
-  match s with
-    (l,i)::res -> lexeme_print l; print_int i; print_string " + "; print_state res
-  | [] -> print_string "+++\n";;
+(* Used to create the predicate needed for List.find.
+   It needs to be partially applied, since List.find preducate takes
+   only one argument (e.g., mypred = check_state_match '5')
+ *)
+let check_state_match lexeme state =
+  let (state_lex, state_num) = state in
+    state_lex = lexeme;;
 
-let print_bool b = match b with true -> print_string "true\n" | false -> print_string "false\n";;
+(* List.find is supposed to return an Option buut for some reason it
+   doesn't do that here? and so this function is not needed.
+ *)
+let contents x =
+  match x with
+      Some (l, s) -> lexeme_print l; print_int s; s
+    | None -> print_string "Syntax error!!!"; -1
+  ;;
 
 let scanner sm cl =
-  let next_lexeme() = lexer cl in
-  (* get_next_state *)
-  let get_next_state transitions lexeme =
-    let lexeme = lexeme_trans lexeme in
-    (* transition_match *)
-    let transition_match lexeme1 transition =
-      (* lexeme_eq *)
-      let lexeme_eq lexeme2 trans_lex =
-	match trans_lex with
-	  Lany -> true
-	| l -> (*print_string "lexeme_eq: ";
-	       lexeme_print l;
-	       lexeme_print lexeme;
-	       print_bool (l = lexeme); *)
-	       l = lexeme2 in
-      (* lexeme_eq *)
-      match transition with (l,i) ->
-			 (* print_string "transition_match: ";
-			 lexeme_print lexeme;
-			 lexeme_print l;
-			 print_bool (lexeme_eq lexeme l); *)
-			 lexeme_eq lexeme l in
-    (* transition_match *)
-    let ns = List.filter (transition_match lexeme) transitions in
-    print_string "ns = "; print_state ns;
-    assert ((List.length ns) <= 1 || (match (List.nth ns 1) with (l,i) -> l = Lany) );
-    match (List.length ns) with
-      0 -> -1
-    | _ -> match (List.nth ns 0) with (l, i) -> i in
-  (* get_next_state *)
-  let rec rec_scanner sm state tokens =
-    let lexeme = next_lexeme() in
-    let next_state = get_next_state state lexeme in print_string "next_state = "; print_int next_state; print_string "\n";
-						    (*print_string "next_state = "; print_int next_state; print_string "\n";*)
-						    match next_state with
-						      -1 -> raise LexerError
-						    | n when n = (List.length sm) -> tokens
-						    | n -> rec_scanner sm (List.nth sm n) (List.append tokens [lexeme]) in
-  rec_scanner sm [(Lsymbol("{"), 1)] [];;
-
+  let next_lexeme() = lexer cl (* ??? *) in
+  let rec match_state state lexeme_o =
+    let lexeme = lexeme_type lexeme_o in
+    lexeme_print lexeme;
+    let next_state_some = List.find (check_state_match lexeme) state in
+      let next_state = next_state_some in
+      match next_state with
+        (l, s) -> lexeme_print l; print_int s; s
+        in
+     (* match state with
+       (l, i)::rest -> (
+          match l with
+             Lany -> i
+			     | lexeme -> print_string "match state "; lexeme_print l; print_int i; print_string " ";i
+			     | _ -> print_string "looking at rest"; match_state rest lexeme)
+     | [] -> print_string "Syntax error!!!"; -1 in  *)
+   let rec rec_scanner sm state tokens =
+     let lexeme = next_lexeme() in
+     let next_state = match_state state lexeme in
+     print_int next_state; print_string " ";
+     match next_state with
+        -1 -> raise LexerError
+      | n when n = (List.length sm) -> tokens
+      (* | _ -> rec_scanner [] [] []; *)
+      | _ -> rec_scanner sm (List.nth sm next_state) (List.append tokens [lexeme]);
+   in rec_scanner sm [(Lsymbol("{"), 1)] [];;
+			      
 exception ParserError of string;;
 (* Parse the class subroutines *)
 
