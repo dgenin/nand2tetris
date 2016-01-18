@@ -1,9 +1,5 @@
 {
     static int x,y,z;
-    /* comment */
-    static char c;
-    !@#$%^&*
-    static void p;
 }
 /* test */
 class Foo {

@@ -6,8 +6,7 @@ type lexeme = Lint of int
 	    | Lstring of string
 	    | Lcomment of string
 	    | Lend
-	    | Lany;;
-
+      | Lany;;
 type string_lexer = {string:string; mutable current:int; size:int } ;;
 
 let lexeme_type l = match l with
@@ -15,14 +14,13 @@ let lexeme_type l = match l with
   | t -> t
 
 let lexeme_print l = match l with
-    Lint i -> print_string ("<int>" ^ (string_of_int i) ^ "</int> ")
-  | Lstring s -> print_string ("<string>" ^ s ^ "</string> ")
-  | Lcomment s -> print_string ("<comment>" ^ s ^ "</comment> ")
-  | Lsymbol s -> print_string ("<symbol>" ^  s ^ "</symbol> ")
-  | Lident s -> print_string ("<identifier>" ^ s ^ "</identifier> ")
-  | Lkeyword s -> print_string ("<keyword>" ^ s ^ "</keyword> ")
-  | Lend -> print_string "end "
-  | Lany -> print_string "any ";;
+    Lint i -> print_string ("<int>" ^ (string_of_int i) ^ "</int>\n")
+  | Lstring s -> print_string ("<string>" ^ s ^ "</string>\n")
+  | Lcomment s -> print_string ("<comment>" ^ s ^ "</comment>\n")
+  | Lsymbol s -> print_string ("<symbol>" ^  s ^ "</symbol>\n")
+  | Lident s -> print_string ("<identifier>" ^ s ^ "</identifier>\n")
+  | Lkeyword s -> print_string ("<keyword>" ^ s ^ "</keyword>\n")
+  | Lend -> print_string "end\n";;
 
 let init_lex s = { string=s; current=0; size=String.length s } ;;
 let forward cl = cl.current <- cl.current + 1 ;;
@@ -98,10 +96,10 @@ let check_state_match lexeme state =
   let (state_lex, state_num) = state in
     state_lex = lexeme;;
 
-(* List.find is supposed to return an Option buut for some reason it
-   doesn't do that here? and so this function is not needed.
+(* List.find is supposed to return an Option buut for some reason it 
+   doesn't do that here? and so this function is not needed. 
  *)
-let contents x =
+let contents x = 
   match x with
       Some (l, s) -> lexeme_print l; print_int s; s
     | None -> print_string "Syntax error!!!"; -1
@@ -122,7 +120,7 @@ let scanner sm cl =
           match l with
              Lany -> i
 			     | lexeme -> print_string "match state "; lexeme_print l; print_int i; print_string " ";i
-			     | _ -> print_string "looking at rest"; match_state rest lexeme)
+			     | _ -> print_string "looking at rest"; match_state rest lexeme) 
      | [] -> print_string "Syntax error!!!"; -1 in  *)
    let rec rec_scanner sm state tokens =
      let lexeme = next_lexeme() in
