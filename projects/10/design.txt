@@ -15,15 +15,3 @@ As it is doing that, it accumulates lexemes into a token list, which it then ret
 The state machine traversal automatically catches errors when invalid transitions are encountered.
 
 To handle Lident, we need to defined a function that splits a Lexeme into the Lexeme type and the Lexeme value (e.g., Lident("foo") would be split into Lident and "foo", while Lend would be split into Lend and None)
-
-StateMachine
--------------
-
-State: (symbol -> next_state, ...)
-
-0: (Lsymbol "{" -> 1)
-1: (Lkeyword "static" -> 2, Lsymbols "}" -> 5, Lany -> 1 )
-2: (Lkeyword "char" -> 3, Lkeyword "int" -> 3, Lkeyword "boolean" -> 3, Lkeyword "void" -> 3)
-3: (Lident "" -> 4)
-4: (Lsymbol "," -> 3, Lsymbol ";" -> 1)
-5: Terminate
