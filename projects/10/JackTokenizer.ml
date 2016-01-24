@@ -460,13 +460,22 @@ let prog = (read_prog "") in
 let l = init_lex prog in
 (* in declaration_print (parse l);; *)
 (* let state_machine = [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] in *)
-let state_machine = [(*0*) [(Lsymbol("{"), 1)]; 
-                     (*1*) [(Lkeyword("static"), 2);(Lsymbol("}"), 5); (Lany,1)]; 
-                     (*2*) [(Lkeyword("char"), 3); (Lkeyword("int"), 3); (Lkeyword("boolean"), 3); (Lkeyword("void"), 3)];
-                     (*3*) [(Lident("*"), 4)];
-                     (*4*) [(Lsymbol(","),3); (Lsymbol(";"),1)]
-                     (*5*) (*Done*) ]; in
+let var_sm = [(*0*) [(Lsymbol("{"), 1)];
+              (*1*) [(Lkeyword("static"), 2);(Lsymbol("}"), 5); (Lany,1)];
+              (*2*) [(Lkeyword("char"), 3); (Lkeyword("int"), 3); (Lkeyword("boolean"), 3); (Lkeyword("void"), 3)];
+              (*3*) [(Lident("*"), 4)];
+              (*4*) [(Lsymbol(","),3); (Lsymbol(";"),1)]
+              (*5*) (*Done*) ]; in
+let class_sm = [(*0*) [(Lsymbol("class"), 1)];
+                (*1*) [(Lident("*"), 2)];
+                (*2*) [(Lsymbol("{"), 3)];
+                (*3*) [(Lkeyword("static"), -1);(Lsymbol("}"), 5); (Lkeyword("method"), -1); (Lkeyword("function"), -1);]; 
+                (*2*) [(Lkeyword("char"), 3); (Lkeyword("int"), 3); (Lkeyword("boolean"), 3); (Lkeyword("void"), 3)];
+                (*3*) [(Lident("*"), 4)];
+                (*4*) [(Lsymbol(","),3); (Lsymbol(";"),1)]
+                (*5*) (*Done*) ]; in
+
 
 (* Parse program and print the resulting token list *)
-let token_list = scanner state_machine l in
+let token_list = scanner var_sm l in
   List.map lexeme_print token_list
