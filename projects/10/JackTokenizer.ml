@@ -466,4 +466,7 @@ let state_machine = [(*0*) [(Lsymbol("{"), 1)];
                      (*3*) [(Lident("*"), 4)];
                      (*4*) [(Lsymbol(","),3); (Lsymbol(";"),1)]
                      (*5*) (*Done*) ]; in
-scanner state_machine l
+
+(* Parse program and print the resulting token list *)
+let token_list = scanner state_machine l in
+  List.map lexeme_print token_list
