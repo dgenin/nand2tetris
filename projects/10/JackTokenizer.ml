@@ -107,13 +107,13 @@ let scanner sm cl =
     let transition_match lexeme1 transition =
       (* lexeme_eq *)
       let lexeme_eq lexeme2 trans_lex =
-	match trans_lex with
-	  Lany -> true
-	| l -> (*print_string "lexeme_eq: ";
-	       lexeme_print l;
-	       lexeme_print lexeme;
-	       print_bool (l = lexeme); *)
-	       l = lexeme2 in
+	       match trans_lex with
+	         Lany -> true
+	       | l -> (*print_string "lexeme_eq: ";
+	         lexeme_print l;
+	         lexeme_print lexeme;
+	         print_bool (l = lexeme); *)
+	         l = lexeme2 in
       (* lexeme_eq *)
       match transition with (l,i) ->
 			 (* print_string "transition_match: ";
@@ -121,14 +121,16 @@ let scanner sm cl =
 			 lexeme_print l;
 			 print_bool (lexeme_eq lexeme l); *)
 			 lexeme_eq lexeme l in
-    (* transition_match *)
+       (* transition_match *)
+    (* get_next_state body *)
     let ns = List.filter (transition_match lexeme) transitions in
     print_string "ns = "; print_state ns;
+    (* TODO: get rid of Lany eventually *)
     assert ((List.length ns) <= 1 || (match (List.nth ns 1) with (l,i) -> l = Lany) );
     match (List.length ns) with
       0 -> -1
     | _ -> match (List.nth ns 0) with (l, i) -> i in
-  (* get_next_state *)
+    (* end of get_next_state body *)
   let rec rec_scanner sm state tokens =
     let lexeme = next_lexeme() in
     let next_state = get_next_state state lexeme in print_string "next_state = "; print_int next_state; print_string "\n";
@@ -458,10 +460,10 @@ let prog = (read_prog "") in
 let l = init_lex prog in
 (* in declaration_print (parse l);; *)
 (* let state_machine = [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] in *)
-let state_machine = [[(Lsymbol("{"), 1)]; 
-                     [(Lsymbol("}"),4); (Lkeyword("static"), 2); (Lany,1)]; 
-                     [(Lkeyword("char"),3); (Lkeyword("int"), 3); (Lkeyword("boolean"), 3); (Lkeyword("void"), 3)];
-                     [(Lident "*", 4)];
-                     [(Lsymbol(","),3); (Lsymbol(";"),1)]
-                    ]; in
+let state_machine = [(*0*) [(Lsymbol("{"), 1)]; 
+                     (*1*) [(Lkeyword("static"), 2);(Lsymbol("}"), 5); (Lany,1)]; 
+                     (*2*) [(Lkeyword("char"), 3); (Lkeyword("int"), 3); (Lkeyword("boolean"), 3); (Lkeyword("void"), 3)];
+                     (*3*) [(Lident("*"), 4)];
+                     (*4*) [(Lsymbol(","),3); (Lsymbol(";"),1)]
+                     (*5*) (*Done*) ]; in
 scanner state_machine l
