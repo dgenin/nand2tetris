@@ -1,0 +1,58 @@
+commit ccadfd6d9c1d51d476c63359a8669e66d0b3d44f
+Author: ilya <ilya@seoul>
+Date:   Mon Sep 7 18:58:45 2015 -0400
+
+    Added parsing of class_vars.
+
+diff --git a/projects/10/JackTokenizer.ml b/projects/10/JackTokenizer.ml
+index 0d45544..6542c4e 100644
+--- a/projects/10/JackTokenizer.ml
++++ b/projects/10/JackTokenizer.ml
+@@ -178,28 +178,34 @@ let get_type token =
+     | _ -> lexeme_print token; raise (ParserError "Invalid type");;
+ 
+ let rec parse_class_subs prog =
++[Dsub (FUNCTION, INT, "Foo", [], [], [])]
++(*
+   match (lexer prog) with
+   | Lkeyword "function" -> Dsub (FUNCTION, get_type (lexer prog),
+   | Lkeyword "method" -> Dsub (METHOD, get_type (lexer prog),
+-  | Lkeyword "constructor" -> Dsub (CONSTRUCTOR, get_type (lexer prog),
++  | Lkeyword "constructor" -> Dsub (CONSTRUCTOR, get_type (lexer prog),*)
+ ;;
+ 
+ 
+ (* Parse class variable declarations *)
+ let rec parse_class_vars prog var_defs =
+-  let get_scope token = match token with Lkeyword "static" -> STATIC | Lkeyword "field" -> FIELD | _ -> raise (ParserError "")
++  let get_scope token = match token with 
++      Lkeyword "static" -> Some STATIC
++    | Lkeyword "field" -> Some FIELD 
++    | _ -> None
+   in let rec get_name prog names = match (lexer prog) with
+-	Lident name -> get_name prog (name::names)
+-      | Lsymbol "," -> get_name prog names
+-      | Lsymbol ";" -> names
+-      | _ -> raise (ParserError "Syntax error in class variable declaration")
+-  in
+-  match (lexer prog) with
+-    ((Lkeyword "static") as t) | ((Lkeyword "field") as t) -> let vscope = get_scope t and vtype = get_type (lexer prog)
+-							      in parse_class_vars prog (List.concat [var_defs;(List.map (fun name -> Dclass_var (vscope, vtype, name)) (get_name prog []))])
+-    | Lkeyword _ -> var_defs
+-    | Lcomment _ -> parse_class_vars prog var_defs
+-    | _ as l -> lexeme_print l; raise (ParserError "Syntax error in class variables declaration");;
++	     Lident name -> get_name prog (name::names)
++       | Lsymbol "," -> get_name prog names
++       | Lsymbol ";" -> names
++       | _ -> raise (ParserError "Syntax error in class variable declaration")
++     in
++     match (lexer prog) with
++       Lcomment _ -> parse_class_vars prog var_defs
++     | _  as t -> match get_scope t with
++                    Some (STATIC | FIELD as vscope) -> 
++                    let vtype = get_type (lexer prog) in
++                    parse_class_vars prog (List.concat [var_defs;(List.map (fun name -> Dclass_var (vscope, vtype, name)) (get_name prog []))])
++                  | None -> var_defs;;
+ 
+ let parse_class prog =
+   match (lexer prog) with

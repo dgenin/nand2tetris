@@ -5,25 +5,17 @@ type lexeme = Lint of int
 	    | Lsymbol of string
 	    | Lstring of string
 	    | Lcomment of string
-	    | Lend
-	    | Lany;;
-
+	    | Lend ;;
 type string_lexer = {string:string; mutable current:int; size:int } ;;
 
-let lexeme_trans l = match l with
-    (Lident _) -> (Lident "*")
-  | t -> t;;
-
-
 let lexeme_print l = match l with
-    Lint i -> print_string ("<int>" ^ (string_of_int i) ^ "</int> ")
-  | Lstring s -> print_string ("<string>" ^ s ^ "</string> ")
-  | Lcomment s -> print_string ("<comment>" ^ s ^ "</comment> ")
-  | Lsymbol s -> print_string ("<symbol>" ^  s ^ "</symbol> ")
-  | Lident s -> print_string ("<identifier>" ^ s ^ "</identifier> ")
-  | Lkeyword s -> print_string ("<keyword>" ^ s ^ "</keyword> ")
-  | Lend -> print_string "end "
-  | Lany -> print_string "any ";;
+    Lint i -> print_string ("<int>" ^ (string_of_int i) ^ "</int>\n")
+  | Lstring s -> print_string ("<string>" ^ s ^ "</string>\n")
+  | Lcomment s -> print_string ("<comment>" ^ s ^ "</comment>\n")
+  | Lsymbol s -> print_string ("<symbol>" ^  s ^ "</symbol>\n")
+  | Lident s -> print_string ("<identifier>" ^ s ^ "</identifier>\n")
+  | Lkeyword s -> print_string ("<keyword>" ^ s ^ "</keyword>\n")
+  | Lend -> print_string "end\n";;
 
 let init_lex s = { string=s; current=0; size=String.length s } ;;
 let forward cl = cl.current <- cl.current + 1 ;;
@@ -85,115 +77,6 @@ exception LexerError ;;
    in
       if cl.current >= cl.size then Lend
       else lexer_char cl.string.[cl.current] ;;
-
-(*** Recursive lexer ***)
- type transition = lexeme * int;;
- type state = transition list;;
- type state_machine = state list;;
-
-let rec print_state s =
-  match s with
-    (l,i)::res -> lexeme_print l; print_int i; print_string " + "; print_state res
-  | [] -> print_string "+++\n";;
-
-let print_bool b = match b with true -> print_string "true\n" | false -> print_string "false\n";;
-
-let scanner sm cl =
-  let next_lexeme() = lexer cl in
-  (* get_next_state *)
-  let get_next_state transitions lexeme =
-    let lexeme = lexeme_trans lexeme in
-    (* transition_match *)
-    let transition_match lexeme1 transition =
-      (* lexeme_eq *)
-      let lexeme_eq lexeme2 trans_lex =
-	       match trans_lex with
-	         Lany -> true
-	       | l -> (*print_string "lexeme_eq: ";
-	         lexeme_print l;
-	         lexeme_print lexeme;
-	         print_bool (l = lexeme); *)
-	         l = lexeme2 in
-      (* lexeme_eq *)
-      match transition with (l,i) ->
-			 (* print_string "transition_match: ";
-			 lexeme_print lexeme;
-			 lexeme_print l;
-			 print_bool (lexeme_eq lexeme l); *)
-			 lexeme_eq lexeme l in
-       (* transition_match *)
-    (* get_next_state body *)
-    let ns = List.filter (transition_match lexeme) transitions in
-    print_string "ns = "; print_state ns;
-    (* TODO: get rid of Lany eventually *)
-    assert ((List.length ns) <= 1 || (match (List.nth ns 1) with (l,i) -> l = Lany) );
-    match (List.length ns) with
-      0 -> -1
-    | _ -> match (List.nth ns 0) with (l, i) -> i in
-    (* end of get_next_state body *)
-  let rec rec_scanner sm state stack tokens =
-    let (_, curr_smn, _) = state in
-    let lexeme = next_lexeme() in
-    let next_state = get_next_state state lexeme in print_string "next_state = "; print_int next_state; print_string "\n";
-						    (*print_string "next_state = "; print_int next_state; print_string "\n";*)
-						    match next_state with
-						     (-1, _) -> raise LexerError
-						    | (smn, sn) when sn = (List.length sm) -> tokens (* pop stack; done when stack is empty *)
-						    | (smn, sn) when smn = curr_smn -> rec_scanner sm (List.nth sm n) stack (List.append tokens [lexeme]) (* same state machine *)
-                | (smn, sn) -> rec_scanner sm(*lookup sm*) (List.nth sm n) (Stack.push stack state) (List.append tokens [lexeme])(* different state machine push on stack*) in
-  rec_scanner sm [(Lsymbol("{"), 1 (* fix 1 *))] Stack.create() [];;
-
-exception ParserError of string;;
-(* Parse the class subroutines *)
-
-
-(* Print state *)
-let print_state state =
-  None;;
-
-(* Extracts a code block delimited by {}, which may contain other blocks *)
-let extract_code_block cl =
-  let st = cl.string in 
-  let rec rec_extract_block n =
-    let rec ext n =
-      if n < cl.size then
-	match (String.get st n) with 
-	  '{' -> ext (rec_extract_block n)
-	| '}' -> n + 1
-	| _ -> ext (n + 1)
-      else raise (ParserError "Unmatched \"{\"") in
-    match (String.get st n) with
-      '{' -> ext (n + 1)
-    | _  -> raise (ParserError "extract_block called on buffer not starting with \"{\"") in
-  init_lex (String.sub st cl.current (rec_extract_block cl.current));;
-
-(* Same as above but uses lexer to walk the program text.
-   Looks uglier because it relies on side-effect from lexer operation *)
-(*let extract_code_block cl =
-  let pos = cl.current in
-  let rec rec_extract_block =
-    let rec ext = 
-      match (lexer cl) with
-	Lsymbol "{" -> rec_extract_block; ext
-      | Lsymbol "}" -> cl.current
-      | _ -> ext in
-    match (lexer cl) with
-      Lsymbol "{" -> ext
-    | _ -> raise (ParserError "extract_block called on buffer not starting with \"{\"") in
-  rec_extract_block pos;
-  init_lex(String.sub cl.string pos cl.current);
-  cl.current <- pos;;*)
-      
-
-(* Extract class vars block *)
-(*let extract_class_vars cl =
-  let st = cl.string in
-  let rec rec_extract_class_vars n =
-    let rec ext tokens =
-      match (lexer cl) with
-	Lkeyword "field" | "static" | "int" | "char" | "boolean" as t -> ext tokens::t
-	| Lidentifier -> ext tokens::t
-	| _ -> tokens dummy, fix it *);; 
 
 (* Read in the program text from stdin *)
 let rec read_prog s =
@@ -302,6 +185,8 @@ let rec declaration_print decl =
      print_string "\n"
   | _ -> print_string "whatever";;
 
+exception ParserError of string;;
+(* Parse the class subroutines *)
 
 (* translate type keyword to type type*)
 let get_type token =
@@ -399,7 +284,10 @@ let rec parse_sub_body prog =
 
 (* Parse class subroutine definitions *)
 let rec parse_class_subs prog =
+[Dsub (FUNCTION, INT, "Foo", [], [], [])]
+(*
   match (lexer prog) with
+<<<<<<< HEAD
     Lkeyword "function" -> let ret_type = get_type (lexer prog) in
 			   let fun_name = get_ident (lexer prog) in
 			   let fun_params = parse_sub_params prog in
@@ -412,11 +300,17 @@ let rec parse_class_subs prog =
 			      let con_vars = parse_sub_vars prog [] in
 			      [Dsub (CONSTRUCTOR, ret_type, con_name, con_params, con_vars, [])]
   | _ -> []
+=======
+  | Lkeyword "function" -> Dsub (FUNCTION, get_type (lexer prog),
+  | Lkeyword "method" -> Dsub (METHOD, get_type (lexer prog),
+  | Lkeyword "constructor" -> Dsub (CONSTRUCTOR, get_type (lexer prog),*)
+>>>>>>> Added parsing of class_vars.
 ;;
 
 
 (* Parse class variable declarations *)
 let rec parse_class_vars prog var_defs =
+<<<<<<< HEAD
   (* translate scope keyword into scope type*)
   let get_scope token = match token with
       Lkeyword "static" -> Some STATIC
@@ -439,6 +333,25 @@ let rec parse_class_vars prog var_defs =
 						in parse_class_vars prog (List.concat [var_defs; more_vars])
 	   (* otherwise, we are done with class variable declaration block, so rewind the lexer for the token to be read again *)
 	   | None -> prog.current <- prev_pos; var_defs;;
+=======
+  let get_scope token = match token with 
+      Lkeyword "static" -> Some STATIC
+    | Lkeyword "field" -> Some FIELD 
+    | _ -> None
+  in let rec get_name prog names = match (lexer prog) with
+	     Lident name -> get_name prog (name::names)
+       | Lsymbol "," -> get_name prog names
+       | Lsymbol ";" -> names
+       | _ -> raise (ParserError "Syntax error in class variable declaration")
+     in
+     match (lexer prog) with
+       Lcomment _ -> parse_class_vars prog var_defs
+     | _  as t -> match get_scope t with
+                    Some (STATIC | FIELD as vscope) -> 
+                    let vtype = get_type (lexer prog) in
+                    parse_class_vars prog (List.concat [var_defs;(List.map (fun name -> Dclass_var (vscope, vtype, name)) (get_name prog []))])
+                  | None -> var_defs;;
+>>>>>>> Added parsing of class_vars.
 
 (* Parse class definition *)
 let parse_class prog =
@@ -458,26 +371,6 @@ let rec parse prog =
   | Lcomment _ -> parse prog
   | _ -> raise (ParserError "Unexpected statement at top level");;
 
-let prog = (read_prog "") in
-let l = init_lex prog in
-(* in declaration_print (parse l);; *)
-(* let state_machine = [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] in *)
-let var_sm = [(*0*) [(Lsymbol("{"), (0,1))];
-              (*1*) [(Lkeyword("static"), (0,2));(Lsymbol("}"), (0,5)); (Lany, (0,1))];
-              (*2*) [(Lkeyword("char"), (0,3)); (Lkeyword("int"), (0,3)); (Lkeyword("boolean"), (0,3)); (Lkeyword("void"), (0,3))];
-              (*3*) [(Lident("*"), (0,4))];
-              (*4*) [(Lsymbol(","), (0,3)); (Lsymbol(";"),(0,1))]
-              (*5*) (*Done*) ]; in
-let class_sm = [(*0*) [(Lsymbol("class"), (1,1))];
-                (*1*) [(Lident("*"), (1,2))];
-                (*2*) [(Lsymbol("{"), (1,3))];
-                (*3*) [(Lkeyword("static"), (-1,-1));(Lsymbol("}"), (1,5)); (Lkeyword("method"), (-1,-1)); (Lkeyword("function"), (-1,-1));]; 
-                (*2*) [(Lkeyword("char"), (1,3)); (Lkeyword("int"), (1,3)); (Lkeyword("boolean"), (1,3)); (Lkeyword("void"), (1,3))];
-                (*3*) [(Lident("*"), (1,4))];
-                (*4*) [(Lsymbol(","),(1,3)); (Lsymbol(";"), (1,1))]
-                (*5*) (*Done*) ]; in
-
-
-(* Parse program and print the resulting token list *)
-let token_list = scanner var_sm l in
-  List.map lexeme_print token_list
+let prog = (read_prog "")
+in let l = init_lex prog
+in declaration_print (parse l);;

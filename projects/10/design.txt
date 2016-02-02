@@ -18,4 +18,4 @@ To handle Lident, we need to defined a function that splits a Lexeme into the Le
 
 How to handle multiple state machines?
 --------------------------------------
-Use a tuple (sm#, state#) where the first number defines the active state machine and the second number defines the active state.
+Use a triple (sm#, state#, stack) where the first number defines the active state machine, the second number defines the active state, and the third part is a stack.
