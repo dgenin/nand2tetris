@@ -87,18 +87,40 @@ exception LexerError ;;
       else lexer_char cl.string.[cl.current] ;;
 
 (*** Recursive lexer ***)
- type transition = lexeme * int;;
+ type transition = lexeme * (int * int);;
  type state = transition list;;
  type state_machine = state list;;
 
+let global_sm =
+        let var_sm = [(*0*) [(Lsymbol("{"), (0,1))];
+                      (*1*) [(Lkeyword("static"), (0,2));(Lsymbol("}"), (0,5)); (Lany, (0,1))];
+                      (*2*) [(Lkeyword("char"), (0,3)); (Lkeyword("int"), (0,3)); (Lkeyword("boolean"), (0,3)); (Lkeyword("void"), (0,3))];
+                      (*3*) [(Lident("*"), (0,4))];
+                      (*4*) [(Lsymbol(","), (0,3)); (Lsymbol(";"),(0,1))]
+                      (*5*) (*Done*) ] in
+      let class_sm = [(*0*) [(Lsymbol("class"), (1,1))];
+                      (*1*) [(Lident("*"), (1,2))];
+                      (*2*) [(Lsymbol("{"), (1,3))];
+                      (*3*) [(Lkeyword("static"), (-1,-1));(Lsymbol("}"), (1,5)); (Lkeyword("method"), (-1,-1)); (Lkeyword("function"), (-1,-1));];
+                      (*2*) [(Lkeyword("char"), (1,3)); (Lkeyword("int"), (1,3)); (Lkeyword("boolean"), (1,3)); (Lkeyword("void"), (1,3))];
+                      (*3*) [(Lident("*"), (1,4))];
+                      (*4*) [(Lsymbol(","),(1,3)); (Lsymbol(";"), (1,1))]
+                (*5*) (*Done*) ] in
+     [var_sm; class_sm];;
+
 let rec print_state s =
   match s with
-    (l,i)::res -> lexeme_print l; print_int i; print_string " + "; print_state res
+    (l,i)::res -> lexeme_print l; let (a,b) = i in print_int a; print_string " "; print_int b; print_string " + "; print_state res
   | [] -> print_string "+++\n";;
 
 let print_bool b = match b with true -> print_string "true\n" | false -> print_string "false\n";;
 
-let scanner sm cl =
+(* returns the transitions in the global state machine for (smn, sn) *)
+let get_transitions s =
+  let (smn, sn) = s in
+  (List.nth (List.nth global_sm smn) sn);;
+
+let scanner cl =
   let next_lexeme() = lexer cl in
   (* get_next_state *)
   let get_next_state transitions lexeme =
@@ -115,7 +137,7 @@ let scanner sm cl =
 	         print_bool (l = lexeme); *)
 	         l = lexeme2 in
       (* lexeme_eq *)
-      match transition with (l,i) ->
+      match transition with (l, (_, _)) ->
 			 (* print_string "transition_match: ";
 			 lexeme_print lexeme;
 			 lexeme_print l;
@@ -124,24 +146,27 @@ let scanner sm cl =
        (* transition_match *)
     (* get_next_state body *)
     let ns = List.filter (transition_match lexeme) transitions in
-    print_string "ns = "; print_state ns;
-    (* TODO: get rid of Lany eventually *)
-    assert ((List.length ns) <= 1 || (match (List.nth ns 1) with (l,i) -> l = Lany) );
-    match (List.length ns) with
-      0 -> -1
-    | _ -> match (List.nth ns 0) with (l, i) -> i in
+      print_string "ns = "; print_state ns;
+      (* TODO: get rid of Lany eventually *)
+      assert ((List.length ns) <= 1 || (match (List.nth ns 1) with (l, i) -> l = Lany) );
+      match (List.length ns) with
+        0 -> (-1, -1)
+      | _ -> match (List.nth ns 0) with (l, i) -> i in
     (* end of get_next_state body *)
-  let rec rec_scanner sm state stack tokens =
-    let (_, curr_smn, _) = state in
+  let rec rec_scanner state stack tokens =
+    let (curr_smn, curr_sn) = state in
+    let transitions = get_transitions state in
     let lexeme = next_lexeme() in
-    let next_state = get_next_state state lexeme in print_string "next_state = "; print_int next_state; print_string "\n";
+    let next_state = get_next_state transitions lexeme in print_string "next_state = ";
+                     let (sm, sn) = next_state in  print_int sm; print_string " ";
+                                                   print_int sn; print_string "\n";
 						    (*print_string "next_state = "; print_int next_state; print_string "\n";*)
 						    match next_state with
 						     (-1, _) -> raise LexerError
-						    | (smn, sn) when sn = (List.length sm) -> tokens (* pop stack; done when stack is empty *)
-						    | (smn, sn) when smn = curr_smn -> rec_scanner sm (List.nth sm n) stack (List.append tokens [lexeme]) (* same state machine *)
-                | (smn, sn) -> rec_scanner sm(*lookup sm*) (List.nth sm n) (Stack.push stack state) (List.append tokens [lexeme])(* different state machine push on stack*) in
-  rec_scanner sm [(Lsymbol("{"), 1 (* fix 1 *))] Stack.create() [];;
+						    | (smn, sn) when sn = (List.length global_sm) -> tokens (* pop stack; done when stack is empty *)
+						    | (smn, sn) when smn = curr_smn -> rec_scanner next_state stack (List.append tokens [lexeme]) (* same state machine *)
+                | (smn, sn) -> rec_scanner next_state (Stack.push (curr_smn, curr_sn) stack) (List.append tokens [lexeme])(* different state machine push on stack*) in
+  rec_scanner (0, 0) Stack.create() [];;
 
 exception ParserError of string;;
 (* Parse the class subroutines *)
@@ -153,11 +178,11 @@ let print_state state =
 
 (* Extracts a code block delimited by {}, which may contain other blocks *)
 let extract_code_block cl =
-  let st = cl.string in 
+  let st = cl.string in
   let rec rec_extract_block n =
     let rec ext n =
       if n < cl.size then
-	match (String.get st n) with 
+	match (String.get st n) with
 	  '{' -> ext (rec_extract_block n)
 	| '}' -> n + 1
 	| _ -> ext (n + 1)
@@ -172,7 +197,7 @@ let extract_code_block cl =
 (*let extract_code_block cl =
   let pos = cl.current in
   let rec rec_extract_block =
-    let rec ext = 
+    let rec ext =
       match (lexer cl) with
 	Lsymbol "{" -> rec_extract_block; ext
       | Lsymbol "}" -> cl.current
@@ -183,7 +208,7 @@ let extract_code_block cl =
   rec_extract_block pos;
   init_lex(String.sub cl.string pos cl.current);
   cl.current <- pos;;*)
-      
+
 
 (* Extract class vars block *)
 (*let extract_class_vars cl =
@@ -193,7 +218,7 @@ let extract_code_block cl =
       match (lexer cl) with
 	Lkeyword "field" | "static" | "int" | "char" | "boolean" as t -> ext tokens::t
 	| Lidentifier -> ext tokens::t
-	| _ -> tokens dummy, fix it *);; 
+	| _ -> tokens dummy, fix it *);;
 
 (* Read in the program text from stdin *)
 let rec read_prog s =
@@ -462,22 +487,7 @@ let prog = (read_prog "") in
 let l = init_lex prog in
 (* in declaration_print (parse l);; *)
 (* let state_machine = [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] in *)
-let var_sm = [(*0*) [(Lsymbol("{"), (0,1))];
-              (*1*) [(Lkeyword("static"), (0,2));(Lsymbol("}"), (0,5)); (Lany, (0,1))];
-              (*2*) [(Lkeyword("char"), (0,3)); (Lkeyword("int"), (0,3)); (Lkeyword("boolean"), (0,3)); (Lkeyword("void"), (0,3))];
-              (*3*) [(Lident("*"), (0,4))];
-              (*4*) [(Lsymbol(","), (0,3)); (Lsymbol(";"),(0,1))]
-              (*5*) (*Done*) ]; in
-let class_sm = [(*0*) [(Lsymbol("class"), (1,1))];
-                (*1*) [(Lident("*"), (1,2))];
-                (*2*) [(Lsymbol("{"), (1,3))];
-                (*3*) [(Lkeyword("static"), (-1,-1));(Lsymbol("}"), (1,5)); (Lkeyword("method"), (-1,-1)); (Lkeyword("function"), (-1,-1));]; 
-                (*2*) [(Lkeyword("char"), (1,3)); (Lkeyword("int"), (1,3)); (Lkeyword("boolean"), (1,3)); (Lkeyword("void"), (1,3))];
-                (*3*) [(Lident("*"), (1,4))];
-                (*4*) [(Lsymbol(","),(1,3)); (Lsymbol(";"), (1,1))]
-                (*5*) (*Done*) ]; in
-
 
 (* Parse program and print the resulting token list *)
-let token_list = scanner var_sm l in
+let token_list = scanner l in
   List.map lexeme_print token_list
