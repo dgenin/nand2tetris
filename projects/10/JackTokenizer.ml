@@ -92,21 +92,28 @@ exception LexerError ;;
  type state_machine = state list;;
 
 let global_sm =
-        let var_sm = [(*0*) [(Lsymbol("{"), (0,1))];
-                      (*1*) [(Lkeyword("static"), (0,2));(Lsymbol("}"), (0,5)); (Lany, (0,1))];
+      let class_sm = [(*0*) [(Lkeyword("class"), (0,1))];
+                      (*1*) [(Lident("*"), (0,2))];
+                      (*2*) [(Lsymbol("{"), (0,3))];
+                      (*3*) [(Lkeyword("static"), (1,0)); (Lkeyword("field"), (1,0)); (Lsymbol("}"), (0,5)); (Lkeyword("method"), (-1,-1)); (Lkeyword("function"), (2,0)); (Lkeyword("constructor"), (-1,-1));];
                       (*2*) [(Lkeyword("char"), (0,3)); (Lkeyword("int"), (0,3)); (Lkeyword("boolean"), (0,3)); (Lkeyword("void"), (0,3))];
                       (*3*) [(Lident("*"), (0,4))];
-                      (*4*) [(Lsymbol(","), (0,3)); (Lsymbol(";"),(0,1))]
+                      (*4*) [(Lsymbol(","),(0,3)); (Lsymbol(";"), (0,1))]
                       (*5*) (*Done*) ] in
-      let class_sm = [(*0*) [(Lsymbol("class"), (1,1))];
+      let var_sm = [  (*0*) [(Lkeyword("char"), (1,1)); (Lkeyword("int"), (1,1)); (Lkeyword("boolean"), (1,1))];
                       (*1*) [(Lident("*"), (1,2))];
-                      (*2*) [(Lsymbol("{"), (1,3))];
-                      (*3*) [(Lkeyword("static"), (-1,-1));(Lsymbol("}"), (1,5)); (Lkeyword("method"), (-1,-1)); (Lkeyword("function"), (-1,-1));];
-                      (*2*) [(Lkeyword("char"), (1,3)); (Lkeyword("int"), (1,3)); (Lkeyword("boolean"), (1,3)); (Lkeyword("void"), (1,3))];
-                      (*3*) [(Lident("*"), (1,4))];
-                      (*4*) [(Lsymbol(","),(1,3)); (Lsymbol(";"), (1,1))]
-                (*5*) (*Done*) ] in
-     [var_sm; class_sm];;
+                      (*2*) [(Lsymbol(","), (1,1)); (Lsymbol(";"),(1,3))]
+                      (*3*) (*Done*) ] in
+      let func_sm = [ (*0*) [(Lkeyword("char"), (2,1)); (Lkeyword("int"), (2,1)); (Lkeyword("boolean"), (2,1)); (Lkeyword("void"), (2,1))];
+                      (*1*) [(Lident("*"), (2,2))];
+                      (*2*) [(Lsymbol("("), (2,3))];
+                      (*3*) [(Lkeyword("char"), (2,4)); (Lkeyword("int"), (2,4)); (Lkeyword("boolean"), (2,4)); (Lsymbol(")"), (2, 6))];
+                      (*4*) [(Lident("*"), (2,5))];
+                      (*5*) [(Lsymbol(","), (2,3)); (Lsymbol(")"), (2,6))];
+                      (*6*) [(Lsymbol("{"), (2,7));];
+                      (*7*) [(Lsymbol("}"), (2,8));];
+                      (*8*) (*Done*) ] in
+     [class_sm; var_sm; func_sm];;
 
 let rec print_state s =
   match s with
@@ -131,7 +138,7 @@ let scanner cl =
       let lexeme_eq lexeme2 trans_lex =
 	       match trans_lex with
 	         Lany -> true
-	       | l -> (*print_string "lexeme_eq: ";
+	       | l -> (* print_string "lexeme_eq: ";
 	         lexeme_print l;
 	         lexeme_print lexeme;
 	         print_bool (l = lexeme); *)
@@ -146,7 +153,7 @@ let scanner cl =
        (* transition_match *)
     (* get_next_state body *)
     let ns = List.filter (transition_match lexeme) transitions in
-      print_string "ns = "; print_state ns;
+      (* print_string "ns = "; print_state ns; *)
       (* TODO: get rid of Lany eventually *)
       assert ((List.length ns) <= 1 || (match (List.nth ns 1) with (l, i) -> l = Lany) );
       match (List.length ns) with
@@ -156,7 +163,7 @@ let scanner cl =
   let rec rec_scanner state stack tokens =
     let (curr_smn, curr_sn) = state in
     let transitions = get_transitions state in
-    let lexeme = next_lexeme() in print_string "lexeme:"; lexeme_print lexeme;
+    let lexeme = next_lexeme() in print_string "lexeme1:"; lexeme_print lexeme;
     let next_state = get_next_state transitions lexeme in print_string "next_state = ";
                      let (sm, sn) = next_state in  print_int sm; print_string " ";
                                                    print_int sn; print_string "\n";
