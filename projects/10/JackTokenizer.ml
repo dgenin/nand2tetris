@@ -169,7 +169,7 @@ let scanner cl =
                                                    print_int sn; print_string "\n";
 						    (*print_string "next_state = "; print_int next_state; print_string "\n";*)
 						    match next_state with
-						     (-1, _) -> raise LexerError
+						     (-1, _) -> if lexeme = Lend then tokens else raise LexerError
 						    | (smn, sn) when sn = (List.length (List.nth global_sm smn)) -> if Stack.is_empty stack then tokens else rec_scanner (Stack.pop stack) stack (List.append tokens [lexeme])(* pop stack; done when stack is empty *)
 						    | (smn, sn) when smn = curr_smn -> rec_scanner next_state stack (List.append tokens [lexeme]) (* same state machine *)
                 | (smn, sn) -> Stack.push (curr_smn, curr_sn) stack;
