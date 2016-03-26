@@ -114,13 +114,6 @@ let extract_code_block cl =
     | _  -> raise (ParserError "extract_block called on buffer not starting with \"{\"") in
   init_lex (String.sub st cl.current (rec_extract_block cl.current));;
 
-(* Read in the program text from stdin *)
-let rec read_prog s =
-  try
-    let l = (s ^ (input_line stdin)) in read_prog l
-  with
-    End_of_file -> s;;
-
 (* Lex the program *)
 let rec lex_all cl =
   let lm = lexer cl in
@@ -370,12 +363,3 @@ let rec parse prog =
 		    | _ -> raise (ParserError "Unexpected keyword at top level"))
   | Lcomment _ -> parse prog
   | _ -> raise (ParserError "Unexpected statement at top level");;
-
-let prog = (read_prog "") in
-let l = init_lex prog in
-(* in declaration_print (parse l);; *)
-(* let state_machine = [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] in *)
-
-(* Parse program and print the resulting token list *)
-let token_list = scanner l in
-  List.map lexeme_print token_list

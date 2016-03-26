@@ -1,7 +1,7 @@
-TARGET=JackTokenizer
-OBJ=lexer.cmx JackTokenizer.cmx
+TARGET=jc
+OBJ=lexer.cmx parser.cmx jc.cmx
 
-JackTokenizer: $(OBJ)
+jc: $(OBJ)
 	ocamlopt -g $^ -o $@
 
 %.cmx:%.ml
