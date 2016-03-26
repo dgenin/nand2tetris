@@ -1,9 +1,13 @@
 open Lexer
 
 (*** Recursive lexer ***)
- type transition = lexeme * (int * int);;
- type state = transition list;;
- type state_machine = state list;;
+type event =
+  | L0 of lexeme
+  | L1 of lexeme * lexeme;;
+
+type transition = event * (int * int);;
+type state = transition list;;
+type state_machine = state list;;
 
 let global_sm =
       let class_sm = [(*0*) [(Lkeyword("class"), (0,1))];
