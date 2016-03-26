@@ -1,7 +1,7 @@
 TARGET=jc
-OBJ=lexer.cmx parser.cmx jc.cmx
+CMX=lexer.cmx parser.cmx jc.cmx
 
-jc: $(OBJ)
+jc: $(CMX)
 	ocamlopt -g $^ -o $@
 
 %.cmx:%.ml
@@ -14,4 +14,4 @@ class: $(TARGET)
 	./$< < class.jack
 
 clean:
-	rm -f $(TARGET) $(OBJ)
+	rm -f $(TARGET) $(CMX) $(CMX:.cmx=.cmi) $(CMX:.cmx=.o)
