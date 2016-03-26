@@ -1,5 +1,8 @@
 JackTokenizer: JackTokenizer.ml
-	ocamlc JackTokenizer.ml -o $@
+	ocamlopt -g JackTokenizer.ml -o $@
 
-run: JackTokenizer
+test: JackTokenizer
 	./$< < test.jack
+
+class: JackTokenizer
+	./$< < class.jack
