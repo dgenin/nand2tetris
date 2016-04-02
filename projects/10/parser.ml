@@ -40,6 +40,11 @@ let rec print_state s =
 
 let print_bool b = match b with true -> print_string "true\n" | false -> print_string "false\n";;
 
+
+let lexeme_trans l = match l with
+    (Lident _) -> (Lident "*")
+  | t -> t;;
+
 (* returns the transitions in the global state machine for (smn, sn) *)
 let get_transitions s =
   let (smn, sn) = s in
