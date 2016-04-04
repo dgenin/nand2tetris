@@ -5,7 +5,7 @@ type event =
   | L0 of lexeme
   | L1 of lexeme * lexeme;;
 
-type transition = event * (int * int);;
+type transition = lexeme * (int * int);;
 type state = transition list;;
 type state_machine = state list;;
 
@@ -31,6 +31,18 @@ let global_sm =
                       (*6*) [(Lsymbol("{"), (2,7));];
                       (*7*) [(Lsymbol("}"), (2,8));];
                       (*8*) (*Done*) ] in
+      (* let expr_sm = [ (*0*) [(Lsymbol("-"), (3,0)); (Lsymbol("~"), (3,0)); (Lkeyword("true"), (3,1));
+                             (Lkeyword("false"), (3,1)); (Lkeyword("null"), (3,1)); (Lkeyword("this"), (3,1));
+                             (Lint(0), (3,1)); (Lkeyword("null"), (3,1)); (Lkeyword("this"), (3,1));
+                             ];
+                      (*1*) [(Lident("*"), (2,2))];
+                      (*2*) [(Lsymbol("("), (2,3))];
+                      (*3*) [(Lkeyword("char"), (2,4)); (Lkeyword("int"), (2,4)); (Lkeyword("boolean"), (2,4)); (Lsymbol(")"), (2, 6))];
+                      (*4*) [(Lident("*"), (2,5))];
+                      (*5*) [(Lsymbol(","), (2,3)); (Lsymbol(")"), (2,6))];
+                      (*6*) [(Lsymbol("{"), (2,7));];
+                      (*7*) [(Lsymbol("}"), (2,8));];
+                      (*8*) (*Done*) ] in *)
      [class_sm; var_sm; func_sm];;
 
 let rec print_state s =
@@ -51,7 +63,6 @@ let get_transitions s =
   (List.nth (List.nth global_sm smn) sn);;
 
 let scanner cl =
-  let next_lexeme() = lexer cl in
   (* get_next_state *)
   let get_next_state transitions lexeme =
     let lexeme = lexeme_trans lexeme in
@@ -86,7 +97,7 @@ let scanner cl =
   let rec rec_scanner state stack tokens =
     let (curr_smn, curr_sn) = state in
     let transitions = get_transitions state in
-    let lexeme = next_lexeme() in print_string "lexeme1:"; lexeme_print lexeme;
+    let lexeme = cl#next in print_string "lexeme1:"; lexeme_print lexeme;
     let next_state = get_next_state transitions lexeme in print_string "next_state = ";
                      let (sm, sn) = next_state in  print_int sm; print_string " ";
                                                    print_int sn; print_string "\n";
@@ -122,13 +133,6 @@ let extract_code_block cl =
       '{' -> ext (n + 1)
     | _  -> raise (ParserError "extract_block called on buffer not starting with \"{\"") in
   init_lex (String.sub st cl.current (rec_extract_block cl.current));;
-
-(* Lex the program *)
-let rec lex_all cl =
-  let lm = lexer cl in
-  match lm with
-    Lend -> None
-  | _    -> lexeme_print lm; lex_all cl;;
 
 (*** Parser ***)
 

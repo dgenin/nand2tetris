@@ -81,3 +81,23 @@ exception LexerError ;;
    in
       if cl.current >= cl.size then Lend
       else lexer_char cl.string.[cl.current] ;;
+
+(* Lex the program *)
+let lex_all prog =
+  let cl = init_lex prog in
+    let rec rec_lex_all cl lex_list =
+      let lm = lexer cl in
+        match lm with
+          Lend -> lex_list
+        | _  -> rec_lex_all cl (lex_list@[lm]) in
+  rec_lex_all cl [];;
+
+class lexeme_list prog =
+    let lexer_list = lex_all prog in
+    object
+      val mutable index = 0
+      val lex_list = lexer_list
+      method peek = List.nth lex_list index
+      method next = let v = List.nth lex_list index in index <- index + 1; v
+      method get_list = lex_list
+end;;

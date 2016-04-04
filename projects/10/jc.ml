@@ -7,7 +7,8 @@ let rec read_prog s =
     End_of_file -> s;;
 
 let prog = (read_prog "") in
-let l = Lexer.init_lex prog in
+let l = new Lexer.lexeme_list prog in
+(* List.map Lexer.lexeme_print l#get_list; *)
 (* in declaration_print (parse l);; *)
 (* let state_machine = [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] in *)
 
