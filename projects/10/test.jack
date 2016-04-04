@@ -1,4 +1,4 @@
-{
+class foo{
     static int x,y,z;
     /* comment */
     static char c;
@@ -16,3 +16,4 @@ class Foo {
         var int foo;
       }
 }
+
