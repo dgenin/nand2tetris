@@ -94,10 +94,11 @@ let lex_all prog =
 
 class lexeme_list prog =
     let lexer_list = lex_all prog in
-    object
+    object (s)
       val mutable index = 0
       val lex_list = lexer_list
-      method peek = List.nth lex_list index
-      method next = let v = List.nth lex_list index in index <- index + 1; v
+      val lex_list_len = List.length lexer_list
+      method peek = if index < lex_list_len then List.nth lex_list index else Lend
+      method next = let v = List.nth lex_list index in index <- index + 1; (v, s#peek)
       method get_list = lex_list
 end;;
