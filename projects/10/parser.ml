@@ -14,11 +14,11 @@ let global_sm =
                       (*3*) [(L0(Lident("*")), (0,4))];
                       (*4*) [(L0(Lsymbol(",")),(0,3)); (L0(Lsymbol(";")), (0,1))] *)
                       (*5*) (*Done*) ] in
-      (* let var_sm = [  (*0*) [(Lkeyword("char"), (1,1)); (Lkeyword("int"), (1,1)); (Lkeyword("boolean"), (1,1))];
-                      (*1*) [(Lident("*"), (1,2))];
-                      (*2*) [(Lsymbol(","), (1,1)); (Lsymbol(";"),(1,3))]
+      let var_sm = [  (*0*) [((Lkeyword("char"), Lany), (1,1)); ((Lkeyword("int"), Lany), (1,1)); ((Lkeyword("boolean"), Lany), (1,1))];
+                      (*1*) [((Lident("*"), Lany), (1,2))];
+                      (*2*) [((Lsymbol(","), Lany), (1,1)); ((Lsymbol(";"), Lany), (1,3))]
                       (*3*) (*Done*) ] in
-      let func_sm = [ (*0*) [(Lkeyword("char"), (2,1)); (Lkeyword("int"), (2,1)); (Lkeyword("boolean"), (2,1)); (Lkeyword("void"), (2,1))];
+(*       let func_sm = [ (*0*) [(Lkeyword("char"), (2,1)); (Lkeyword("int"), (2,1)); (Lkeyword("boolean"), (2,1)); (Lkeyword("void"), (2,1))];
                       (*1*) [(Lident("*"), (2,2))];
                       (*2*) [(Lsymbol("("), (2,3))];
                       (*3*) [(Lkeyword("char"), (2,4)); (Lkeyword("int"), (2,4)); (Lkeyword("boolean"), (2,4)); (Lsymbol(")"), (2, 6))];
@@ -39,7 +39,7 @@ let global_sm =
                       (*6*) [(Lsymbol("{"), (2,7));];
                       (*7*) [(Lsymbol("}"), (2,8));];
                       (*8*) (*Done*) ] in *)
-     [class_sm];;(*); var_sm; func_sm];;*)
+     [class_sm; var_sm;];;(*) func_sm];;*)
 
 let rec print_state s =
   match s with
