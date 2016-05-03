@@ -4,5 +4,7 @@ class Foo {
 
       function char foo(int foo)
       {
+	var int ii;
+	var char cc;
       }
 }

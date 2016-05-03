@@ -25,7 +25,7 @@ let global_sm =
                       (*4*) [((Lident("*"), Lany), (2,5))];
                       (*5*) [((Lsymbol(","), Lany), (2,3)); ((Lsymbol(")"), Lany), (2,6))];
                       (*6*) [((Lsymbol("{"), Lany), (2,7));];
-                      (*7*) [((Lsymbol("}"), Lany), (2,8));];
+                      (*7*) [((Lsymbol("}"), Lany), (2,8)); ((Lkeyword("var"), Lany), (1,0));];
                       (*8*) (*Done*) ] in
       (* let expr_sm = [ (*0*) [(Lsymbol("-"), (3,0)); (Lsymbol("~"), (3,0)); (Lkeyword("true"), (3,1));
                              (Lkeyword("false"), (3,1)); (Lkeyword("null"), (3,1)); (Lkeyword("this"), (3,1));
