@@ -4,6 +4,9 @@ CMX=lexer.cmx parser.cmx jc.cmx
 jc: $(CMX)
 	ocamlopt -g $^ -o $@
 
+gendot: lexer.cmx statemachine.cmx
+	ocamlopt -g $^ -o $@
+
 %.cmx:%.ml
 	ocamlopt -c $^
 

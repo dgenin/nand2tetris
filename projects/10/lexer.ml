@@ -3,6 +3,7 @@ type lexeme = Lint of int
         | Lkeyword of string
         | Lident of string
         | Lsymbol of string
+        | Lop of char
         | Lstring of string
         | Lcomment of string
         | Lend
@@ -15,6 +16,7 @@ let lexeme_print l = match l with
     Lint i -> print_string ("<int>" ^ (string_of_int i) ^ "</int> ")
   | Lstring s -> print_string ("<string>" ^ s ^ "</string> ")
   | Lcomment s -> print_string ("<comment>" ^ s ^ "</comment> ")
+  | Lop c -> print_string "<op>"; print_char c; print_string "</op>"
   | Lsymbol s -> print_string ("<symbol>" ^  s ^ "</symbol> ")
   | Lident s -> print_string ("<identifier>" ^ s ^ "</identifier> ")
   | Lkeyword s -> print_string ("<keyword>" ^ s ^ "</keyword> ")
@@ -61,9 +63,10 @@ exception LexerError ;;
      | '"'      -> forward cl ;
            let res = Lstring (extract (fun st -> st.[0] <> '"') cl)
            in forward cl ; res
-     | '+' | '-' | '*' | '&' | '|' | '!' | '='
-     | '(' | ')' | ',' | ';' | '{' | '}' | '.'
-     | '[' | ']' | '<' | '>' ->
+     | '+' | '-' | '*' | '&' | '|' | '=' | '<' | '>' ->
+           forward cl; Lop c
+     | '(' | ')' | ',' | ';' | '{' | '}' | '.' | '~'
+     | '[' | ']'  ->
            forward cl; Lsymbol (String.make 1 c)
      | '/'      -> forward cl;
            if cl.current >= cl.size then Lsymbol (String.make 1 c)
@@ -75,7 +78,7 @@ exception LexerError ;;
             | ('/', '*') -> forward_n cl 2;
                        let res = (Lcomment (extract (fun st -> (String.compare (String.sub st 0 2) "*/") != 0) cl))
                        in forward_n cl 2; res
-            | _          -> Lsymbol (String.make 1 c)
+            | _          -> Lop c
            )
      | _ -> raise LexerError
    in
@@ -99,6 +102,9 @@ class lexeme_list prog =
       val lex_list = lexer_list
       val lex_list_len = List.length lexer_list
       method peek = if index < lex_list_len then List.nth lex_list index else Lend
-      method next = let v = List.nth lex_list index in index <- index + 1; (v, s#peek)
+      method next = let v = List.nth lex_list index in index <- index + 1;
+        match v with
+        | Lcomment l -> s#next
+        | _ -> (v, s#peek)
       method get_list = lex_list
 end;;

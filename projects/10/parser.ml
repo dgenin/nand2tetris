@@ -6,44 +6,105 @@ type state = transition list;;
 type state_machine = state list;;
 
 let global_sm =
+      (*0*)
       let class_sm = [(*0*) [((Lkeyword("class"), Lany), (0,1))];
                       (*1*) [((Lident("*"), Lany), (0,2))];
                       (*2*) [((Lsymbol("{"), Lany), (0,3))];
-                      (*3*) [((Lkeyword("static"), Lany), (1,0)); ((Lkeyword("field"), Lany), (1,0)); ((Lsymbol("}"), Lany), (0,4)); ((Lkeyword("method"), Lany), (-1,-1)); ((Lkeyword("function"), Lany), (2,0)); ((Lkeyword("constructor"), Lany), (-1,-1));]
+                      (*3*) [((Lkeyword("static"), Lany), (1,0)); ((Lkeyword("field"), Lany), (1,0)); ((Lsymbol("}"), Lany), (0,4));
+                             ((Lkeyword("method"), Lany), (-1,-1)); ((Lkeyword("function"), Lany), (2,0));
+                             ((Lkeyword("constructor"), Lany), (-1,-1));]
                       (* (*2*) [(L0(Lkeyword("char"))), (0,3)); (L0(Lkeyword("int")), (0,3)); (L0(Lkeyword("boolean")), (0,3)); (L0(Lkeyword("void")), (0,3))];
                       (*3*) [(L0(Lident("*")), (0,4))];
                       (*4*) [(L0(Lsymbol(",")),(0,3)); (L0(Lsymbol(";")), (0,1))] *)
                       (*5*) (*Done*) ] in
+      (*1*)
       let var_sm = [  (*0*) [((Lkeyword("char"), Lany), (1,1)); ((Lkeyword("int"), Lany), (1,1)); ((Lkeyword("boolean"), Lany), (1,1))];
                       (*1*) [((Lident("*"), Lany), (1,2))];
                       (*2*) [((Lsymbol(","), Lany), (1,1)); ((Lsymbol(";"), Lany), (1,3))]
                       (*3*) (*Done*) ] in
-      let func_sm = [ (*0*) [((Lkeyword("char"), Lany), (2,1)); ((Lkeyword("int"), Lany), (2,1)); ((Lkeyword("boolean"), Lany), (2,1)); ((Lkeyword("void"), Lany), (2,1))];
+      (*2*)
+      let func_sm = [ (*0*) [((Lkeyword("char"), Lany), (2,1)); ((Lkeyword("int"), Lany), (2,1)); ((Lkeyword("boolean"), Lany), (2,1));
+                             ((Lkeyword("void"), Lany), (2,1))];
                       (*1*) [((Lident("*"), Lany), (2,2))];
                       (*2*) [((Lsymbol("("), Lany), (2,3))];
                       (*3*) [((Lkeyword("char"), Lany), (2,4)); ((Lkeyword("int"), Lany), (2,4)); ((Lkeyword("boolean"), Lany), (2,4)); ((Lsymbol(")"), Lany), (2, 6))];
                       (*4*) [((Lident("*"), Lany), (2,5))];
                       (*5*) [((Lsymbol(","), Lany), (2,3)); ((Lsymbol(")"), Lany), (2,6))];
                       (*6*) [((Lsymbol("{"), Lany), (2,7));];
-                      (*7*) [((Lsymbol("}"), Lany), (2,8)); ((Lkeyword("var"), Lany), (1,0));];
+                      (*7*) [((Lsymbol("}"), Lany), (2,8)); ((Lkeyword("var"), Lany), (1,0)); ((Lkeyword("let"), Lany), (3,1));];
                       (*8*) (*Done*) ] in
-      (* let expr_sm = [ (*0*) [(Lsymbol("-"), (3,0)); (Lsymbol("~"), (3,0)); (Lkeyword("true"), (3,1));
-                             (Lkeyword("false"), (3,1)); (Lkeyword("null"), (3,1)); (Lkeyword("this"), (3,1));
-                             (Lint(0), (3,1)); (Lkeyword("null"), (3,1)); (Lkeyword("this"), (3,1));
+      (*3*)
+      let statement_sm = [
+                      (*0*) [((Lkeyword("let"), Lany), (3,1))];
+                            (* varName [ expression ] *)         (* varName *)
+                      (*1*) [((Lident("*"), Lsymbol("[")), (3,3)); ((Lident("*"), Lop '='), (3,5))];
+                      (*2*) [((Lsymbol(";"), Lany)), (3,7)];
+
+                             (* varName [ expression ] *)
+                      (*3*) [((Lsymbol("["), Lany), (4,0))];
+                      (*4*) [((Lsymbol("]"), Lop '='), (3,5))];
+
+                      (*5*) [((Lop '=', Lany), (4,0))];
+                      (*6*) [((Lsymbol(";"), Lany), (3,7))];
+                      (*7*)
+                    ] in
+      (*4*)
+      let expr_sm = [ (*0*) [
+                             (* unary operators *)
+                             ((Lsymbol("-"), Lany), (4,0)); ((Lsymbol("~"), Lany), (4,0));
+                             (*keyword costants*)
+                             ((Lkeyword("true"), Lany), (3,1)); ((Lkeyword("false"), Lany), (3,1)); ((Lkeyword("null"), Lany), (3,1)); ((Lkeyword("this"), Lany), (3,1));
+                             (* int constant *)
+                             ((Lint(0), Lany), (3,1));
+                             (* string contant *)
+                             ((Lstring("str"), Lany), (3,1));
+                             (* varName [ expression ] *)
+                             ((Lident "*", Lsymbol "["), )
                              ];
-                      (*1*) [(Lident("*"), (2,2))];
-                      (*2*) [(Lsymbol("("), (2,3))];
-                      (*3*) [(Lkeyword("char"), (2,4)); (Lkeyword("int"), (2,4)); (Lkeyword("boolean"), (2,4)); (Lsymbol(")"), (2, 6))];
-                      (*4*) [(Lident("*"), (2,5))];
-                      (*5*) [(Lsymbol(","), (2,3)); (Lsymbol(")"), (2,6))];
-                      (*6*) [(Lsymbol("{"), (2,7));];
-                      (*7*) [(Lsymbol("}"), (2,8));];
-                      (*8*) (*Done*) ] in *)
-     [class_sm; var_sm; func_sm];;
+                      (*1*) [((Lident("*"), Lany), (2,2))];
+                      (*2*) [((Lsymbol("("), Lany), (2,3))];
+                      (*3*) [((Lkeyword("char"), Lany), (2,4)); ((Lkeyword("int"), Lany), (2,4)); ((Lkeyword("boolean"), Lany), (2,4)); ((Lsymbol(")"), Lany), (2, 6))];
+                      (*4*) [((Lident("*"), Lany), (2,5))];
+                      (*5*) [((Lsymbol(","), Lany), (2,3)); ((Lsymbol(")"), Lany), (2,6))];
+                      (*6*) [((Lsymbol("{"), Lany), (2,7))];
+                      (*7*) [((Lsymbol("}"), Lany), (2,8))];
+                      (*8*) (*Done*) ] in
+
+      (*5*)                  (* unary op*)
+      let term_sm = [ (*0*) [((Lop('-'), Lany), (5,0)); ((Lsymbol("~"), Lany), (5,0));
+                             (* term followed by an op*)
+                             ((Lint(0), Lop('$')), (6,0)); ((Lstring("str"), Lop('$')), (6,0)); ((Lident("*"), Lop('$')), (6,0)); ((Lident("*"), Lsymbol("(")), (5,4)); ((Lident("*"), Lsymbol("[")), (5,2));
+                             (* term not followed by an op*)
+                             ((Lint(0), Lany), (5,6));     ((Lstring("str"), Lany), (5,6));     ((Lident("*"), Lany), (5,6)); ((Lsymbol("("), Lany), (4,0))];
+
+                            (* handles: (expression) *)
+                            (* term followed by an op*)        (* term followed by an op*)
+                      (*1*) [((Lident(")"), Lop('$')), (6,0)); ((Lident(")"), Lany), (6,0))];
+
+                            (* handles varName [ expression ] *)
+                      (*2*) [((Lsymbol("["), Lany), (4,0))];
+                            (* term followed by an op*)        (* term followed by an op*)
+                      (*3*) [((Lsymbol("]"), Lop('$')), (6,0)); ((Lsymbol("]"), Lop('$')), (5,6))];
+
+                            (* handles subroutine call *)
+                      (*4*) [((Lsymbol("("), Lany), (-1,-1))]; (*TODO: expression list*)
+                            (* term followed by an op*)        (* term followed by an op*)
+                      (*5*) [((Lsymbol(")"), Lop('$')), (6,0)); ((Lsymbol(")"), Lop('$')), (5,6))];
+                      (*6*) (*Done*) ] in
+      (*6*)
+      let op_sm = [   (*0*) [((Lop("*"), Lsymbol("(")), (-1,-1)); ((Lident("*"), Lsymbol("[")), (-1,-1)); ((Lident("*"), Lany), (6,5)); ((Lsymbol("("), Lany), (4,0)); ((Lsymbol("-"), Lany), (5,0)); ((Lsymbol("~"), Lany), (5,0))];
+                      (*1*) [((Lident(")"), Lany), (6,5))];
+                      (*2*) [((Lany, Lany), (-1,-1))];
+                      (*3*) [((Lany, Lany), (-1,-1))];
+                      (*4*) [((Lany, Lany), (-1,-1))];
+                      (*5*) (*Done*) ] in
+
+
+     [class_sm; var_sm; func_sm; statement_sm; expr_sm; term_sm; op_sm];;
 
 let rec print_state s =
   match s with
-    (l,i)::res -> lexeme_print l; let (a,b) = i in print_int a; print_string " "; print_int b; print_string " + "; print_state res
+    (l,i)::res -> let (l0, l1) = l in lexeme_print l0; print_string " "; lexeme_print l1; let (a,b) = i in print_int a; print_string " "; print_int b; print_string " + "; print_state res
   | [] -> print_string "+++\n";;
 
 let print_bool b = match b with true -> print_string "true\n" | false -> print_string "false\n";;
@@ -101,7 +162,15 @@ let scanner cl =
 						    (*print_string "next_state = "; print_int next_state; print_string "\n";*)
 						    match next_state with
 						     (-1, _) -> if lexeme = Lend && Stack.is_empty stack then tokens else raise LexerError
-						    | (smn, sn) when sn = (List.length (List.nth global_sm smn)) -> if Stack.is_empty stack then tokens else rec_scanner (Stack.pop stack) stack (List.append tokens [lexeme])(* pop stack; done when stack is empty *)
+						    | (smn, sn) when sn = (List.length (List.nth global_sm smn)) -> (* pop stack; done when stack is empty *)
+                            if Stack.is_empty stack then tokens
+                            else
+                              begin
+                                let stack_state = Stack.pop stack in
+                                match stack_state with
+                                 (stack_smn, stack_sn) when curr_smn = 4 -> rec_scanner (stack_smn, stack_sn + 1) stack (List.append tokens [lexeme])
+                                 | _ -> rec_scanner stack_state stack (List.append tokens [lexeme]);
+                              end
 						    | (smn, sn) when smn = curr_smn -> rec_scanner next_state stack (List.append tokens [lexeme]) (* same state machine *)
                 | (smn, sn) -> Stack.push (curr_smn, curr_sn) stack;
                                rec_scanner next_state stack (List.append tokens [lexeme])(* different state machine push on stack*) in
