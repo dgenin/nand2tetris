@@ -12,7 +12,7 @@ let global_sm =
                       (*2*) [((Lsymbol("{"), Lany), (0,3))];
                       (*3*) [((Lkeyword("static"), Lany), (1,0)); ((Lkeyword("field"), Lany), (1,0)); ((Lsymbol("}"), Lany), (0,4));
                              ((Lkeyword("method"), Lany), (-1,-1)); ((Lkeyword("function"), Lany), (2,0));
-                             ((Lkeyword("constructor"), Lany), (-1,-1));]
+                            ((Lkeyword("constructor"), Lany), (-1,-1));]
                       (* (*2*) [(L0(Lkeyword("char"))), (0,3)); (L0(Lkeyword("int")), (0,3)); (L0(Lkeyword("boolean")), (0,3)); (L0(Lkeyword("void")), (0,3))];
                       (*3*) [(L0(Lident("*")), (0,4))];
                       (*4*) [(L0(Lsymbol(",")),(0,3)); (L0(Lsymbol(";")), (0,1))] *)
@@ -63,7 +63,7 @@ let global_sm =
 
                              (* handles: (expression) *)
                             (* term followed by an op*)        (* term not followed by an op*)
-                      (*1*) [((Lident(")"), Lop('$')), (6,0)); ((Lident(")"), Lany), (4,2))];
+                      (*1*) [((Lsymbol(")"), Lop('$')), (6,0)); ((Lsymbol(")"), Lany), (4,2))];
                       (*2*) (*Done*) ] in
 
       (*5*)                  (* unary op*)
@@ -75,7 +75,7 @@ let global_sm =
 
                             (* handles: (expression) *)
                             (* term followed by an op*)        (* term not followed by an op*)
-                      (*1*) [((Lident(")"), Lop('$')), (6,0)); ((Lident(")"), Lany), (6,0))];
+                      (*1*) [((Lsymbol(")"), Lop('$')), (6,0)); ((Lsymbol(")"), Lany), (6,0))];
 
                             (* handles varName [ expression ] *)
                       (*2*) [((Lsymbol("["), Lany), (4,0))];
@@ -89,7 +89,7 @@ let global_sm =
                       (*6*) (*Done*) ] in
       (*6*)
       let op_sm = [   (*0*) [((Lop('*'), Lsymbol("(")), (-1,-1)); ((Lident("*"), Lsymbol("[")), (-1,-1)); ((Lident("*"), Lany), (6,5)); ((Lsymbol("("), Lany), (4,0)); ((Lsymbol("-"), Lany), (5,0)); ((Lsymbol("~"), Lany), (5,0))];
-                      (*1*) [((Lident(")"), Lany), (6,5))];
+                      (*1*) [((Lsymbol(")"), Lany), (6,5))];
                       (*2*) [((Lany, Lany), (-1,-1))];
                       (*3*) [((Lany, Lany), (-1,-1))];
                       (*4*) [((Lany, Lany), (-1,-1))];

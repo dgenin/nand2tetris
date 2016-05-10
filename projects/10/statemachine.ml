@@ -1,5 +1,6 @@
 open Lexer
 
+
 let global_sm =
       (*0*)
       let class_sm = [(*0*) [((Lkeyword("class"), Lany), (0,1))];
@@ -58,7 +59,7 @@ let global_sm =
 
                              (* handles: (expression) *)
                             (* term followed by an op*)        (* term not followed by an op*)
-                      (*1*) [((Lident(")"), Lop('$')), (6,0)); ((Lident(")"), Lany), (4,2))];
+                      (*1*) [((Lsymbol(")"), Lop('$')), (6,0)); ((Lsymbol(")"), Lany), (4,2))];
                       (*2*) (*Done*) ] in
 
       (*5*)                  (* unary op*)
@@ -70,7 +71,7 @@ let global_sm =
 
                             (* handles: (expression) *)
                             (* term followed by an op*)        (* term not followed by an op*)
-                      (*1*) [((Lident(")"), Lop('$')), (6,0)); ((Lident(")"), Lany), (6,0))];
+                      (*1*) [((Lsymbol(")"), Lop('$')), (6,0)); ((Lsymbol(")"), Lany), (6,0))];
 
                             (* handles varName [ expression ] *)
                       (*2*) [((Lsymbol("["), Lany), (4,0))];
@@ -84,7 +85,7 @@ let global_sm =
                       (*6*) (*Done*) ] in
       (*6*)
       let op_sm = [   (*0*) [((Lop('*'), Lsymbol("(")), (-1,-1)); ((Lident("*"), Lsymbol("[")), (-1,-1)); ((Lident("*"), Lany), (6,5)); ((Lsymbol("("), Lany), (4,0)); ((Lsymbol("-"), Lany), (5,0)); ((Lsymbol("~"), Lany), (5,0))];
-                      (*1*) [((Lident(")"), Lany), (6,5))];
+                      (*1*) [((Lsymbol(")"), Lany), (6,5))];
                       (*2*) [((Lany, Lany), (-1,-1))];
                       (*3*) [((Lany, Lany), (-1,-1))];
                       (*4*) [((Lany, Lany), (-1,-1))];
