@@ -7,6 +7,9 @@ jc: $(CMX)
 gendot: lexer.cmx statemachine.cmx
 	ocamlopt -g $^ -o $@
 
+sm2.pdf: sm2.dot
+	dot -Tps2 sm2.dot -o sm2.ps | ps2pdf sm2.ps
+
 %.cmx:%.ml
 	ocamlopt -c $^
 
