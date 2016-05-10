@@ -7,7 +7,7 @@ let global_sm =
                       (*2*) [((Lsymbol("{"), Lany), (0,3))];
                       (*3*) [((Lkeyword("static"), Lany), (1,0)); ((Lkeyword("field"), Lany), (1,0)); ((Lsymbol("}"), Lany), (0,4));
                              ((Lkeyword("method"), Lany), (-1,-1)); ((Lkeyword("function"), Lany), (2,0));
-                             ((Lkeyword("constructor"), Lany), (-1,-1));]
+                            ((Lkeyword("constructor"), Lany), (-1,-1));]
                       (* (*2*) [(L0(Lkeyword("char"))), (0,3)); (L0(Lkeyword("int")), (0,3)); (L0(Lkeyword("boolean")), (0,3)); (L0(Lkeyword("void")), (0,3))];
                       (*3*) [(L0(Lident("*")), (0,4))];
                       (*4*) [(L0(Lsymbol(",")),(0,3)); (L0(Lsymbol(";")), (0,1))] *)
@@ -31,31 +31,35 @@ let global_sm =
       (*3*)
       let statement_sm = [
                       (*0*) [((Lkeyword("let"), Lany), (3,1))];
-                            (* varName [ expression ] *)         (* varName *)
-                      (*1*) [((Lident("*"), Lsymbol("[")), (3,3)); ((Lident("*"), Lany), (3,5))];
+                            (* varName [ expression ] = *)         (* varName = *)
+                      (*1*) [((Lident("*"), Lsymbol("[")), (3,3)); ((Lident("*"), Lop '='), (3,5))];
                       (*2*) [((Lsymbol(";"), Lany)), (3,7)];
 
-                             (* varName [ expression ] *)
+                             (* varName [ expression ] = *)
                       (*3*) [((Lsymbol("["), Lany), (4,0))];
-                      (*4*) [((Lsymbol("]"), Lany), (3,4))];
+                      (*4*) [((Lsymbol("]"), Lop '='), (3,5))];
 
                       (*5*) [((Lop '=', Lany), (4,0))];
                       (*6*) [((Lsymbol(";"), Lany), (3,7))];
                       (*7*)
                     ] in
-      (*4*)
-      let expr_sm = [ (*0*) [((Lsymbol("-"), Lany), (3,0)); ((Lsymbol("~"), Lany), (3,0)); ((Lkeyword("true"), Lany), (3,1));
-                             ((Lkeyword("false"), Lany), (3,1)); ((Lkeyword("null"), Lany), (3,1)); ((Lkeyword("this"), Lany), (3,1));
-                             ((Lint(0), Lany), (3,1)); ((Lkeyword("null"), Lany), (3,1)); ((Lkeyword("this"), Lany), (3,1))
-                             ];
-                      (*1*) [((Lident("*"), Lany), (2,2))];
-                      (*2*) [((Lsymbol("("), Lany), (2,3))];
-                      (*3*) [((Lkeyword("char"), Lany), (2,4)); ((Lkeyword("int"), Lany), (2,4)); ((Lkeyword("boolean"), Lany), (2,4)); ((Lsymbol(")"), Lany), (2, 6))];
-                      (*4*) [((Lident("*"), Lany), (2,5))];
-                      (*5*) [((Lsymbol(","), Lany), (2,3)); ((Lsymbol(")"), Lany), (2,6))];
-                      (*6*) [((Lsymbol("{"), Lany), (2,7))];
-                      (*7*) [((Lsymbol("}"), Lany), (2,8))];
-                      (*8*) (*Done*) ] in
+      (*4*)                   (* unary op *)
+      let expr_sm = [ (*0*) [((Lop('-'), Lany), (5,0)); ((Lsymbol("~"), Lany), (5,0));
+                             (* term followed by an op*)
+                             ((Lint(0), Lop('$')), (6,0)); ((Lstring("str"), Lop('$')), (6,0)); ((Lident("*"), Lop('$')), (6,0));
+                             (* expression list *)
+                             ((Lident("*"), Lsymbol("(")), (5,4));
+                             (* varName [ expression ] *)
+                             ((Lident("*"), Lsymbol("[")), (5,2));
+                             (* (expression) *)
+                             ((Lsymbol("("), Lany), (4,0));
+                             (* term not followed by an op*)
+                             ((Lint(0), Lany), (4,2));     ((Lstring("str"), Lany), (4,2)); ((Lident("*"), Lany), (4,2))];
+
+                             (* handles: (expression) *)
+                            (* term followed by an op*)        (* term not followed by an op*)
+                      (*1*) [((Lident(")"), Lop('$')), (6,0)); ((Lident(")"), Lany), (4,2))];
+                      (*2*) (*Done*) ] in
 
       (*5*)                  (* unary op*)
       let term_sm = [ (*0*) [((Lop('-'), Lany), (5,0)); ((Lsymbol("~"), Lany), (5,0));
@@ -65,22 +69,22 @@ let global_sm =
                              ((Lint(0), Lany), (5,6));     ((Lstring("str"), Lany), (5,6));     ((Lident("*"), Lany), (5,6)); ((Lsymbol("("), Lany), (4,0))];
 
                             (* handles: (expression) *)
-                            (* term followed by an op*)        (* term followed by an op*)
+                            (* term followed by an op*)        (* term not followed by an op*)
                       (*1*) [((Lident(")"), Lop('$')), (6,0)); ((Lident(")"), Lany), (6,0))];
 
                             (* handles varName [ expression ] *)
                       (*2*) [((Lsymbol("["), Lany), (4,0))];
-                            (* term followed by an op*)        (* term followed by an op*)
-                      (*3*) [((Lsymbol("]"), Lop('$')), (6,0)); ((Lsymbol("]"), Lop('$')), (5,6))];
+                            (* term followed by an op*)        (* term not followed by an op*)
+                      (*3*) [((Lsymbol("]"), Lop('$')), (6,0)); ((Lsymbol("]"), Lany), (5,6))];
 
                             (* handles subroutine call *)
                       (*4*) [((Lsymbol("("), Lany), (-1,-1))]; (*TODO: expression list*)
-                            (* term followed by an op*)        (* term followed by an op*)
-                      (*5*) [((Lsymbol(")"), Lop('$')), (6,0)); ((Lsymbol(")"), Lop('$')), (5,6))];
+                            (* term followed by an op*)        (* term not followed by an op*)
+                      (*5*) [((Lsymbol(")"), Lop('$')), (6,0)); ((Lsymbol(")"), Lany), (5,6))];
                       (*6*) (*Done*) ] in
       (*6*)
-      let op_sm = [ (*0*) [((Lident("*"), Lsymbol("(")), (-1,-1)); ((Lident("*"), Lsymbol("[")), (-1,-1)); ((Lident("*"), Lany), (5,5)); ((Lsymbol("("), Lany), (4,0)); ((Lsymbol("-"), Lany), (5,0)); ((Lsymbol("~"), Lany), (5,0))];
-                      (*1*) [((Lident(")"), Lany), (5,5))];
+      let op_sm = [   (*0*) [((Lop('*'), Lsymbol("(")), (-1,-1)); ((Lident("*"), Lsymbol("[")), (-1,-1)); ((Lident("*"), Lany), (6,5)); ((Lsymbol("("), Lany), (4,0)); ((Lsymbol("-"), Lany), (5,0)); ((Lsymbol("~"), Lany), (5,0))];
+                      (*1*) [((Lident(")"), Lany), (6,5))];
                       (*2*) [((Lany, Lany), (-1,-1))];
                       (*3*) [((Lany, Lany), (-1,-1))];
                       (*4*) [((Lany, Lany), (-1,-1))];
