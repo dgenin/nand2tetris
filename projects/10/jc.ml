@@ -14,4 +14,4 @@ let l = new Lexer.lexeme_list prog in
 
 (* Parse program and print the resulting token list *)
 let token_list = Parser.scanner l in
-  List.map Lexer.lexeme_print token_list
+  List.map (fun l -> Lexer.lexeme_print l; print_char ' ') token_list

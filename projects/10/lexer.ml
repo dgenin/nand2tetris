@@ -13,15 +13,15 @@ type string_lexer = {string:string; mutable current:int; size:int } ;;
 
 
 let lexeme_print l = match l with
-    Lint i -> print_string ("<int>" ^ (string_of_int i) ^ "</int> ")
-  | Lstring s -> print_string ("<string>" ^ s ^ "</string> ")
-  | Lcomment s -> print_string ("<comment>" ^ s ^ "</comment> ")
-  | Lop c -> print_string "<op>"; print_char c; print_string "</op>"
-  | Lsymbol s -> print_string ("<symbol>" ^  s ^ "</symbol> ")
-  | Lident s -> print_string ("<identifier>" ^ s ^ "</identifier> ")
-  | Lkeyword s -> print_string ("<keyword>" ^ s ^ "</keyword> ")
-  | Lend -> print_string "end "
-  | Lany -> print_string "any ";;
+    Lint i -> print_string ("int:" ^ (string_of_int i))
+  | Lstring s -> print_string ("str:" ^ s)
+  | Lcomment s -> print_string ("cmt:" ^ s)
+  | Lop c -> print_string "op:"; print_char c;
+  | Lsymbol s -> print_string ("sym:" ^  s)
+  | Lident s -> print_string ("id:" ^ s)
+  | Lkeyword s -> print_string ("key:" ^ s)
+  | Lend -> print_string "end"
+  | Lany -> print_string "any";;
 
 let init_lex s = { string=s; current=0; size=String.length s } ;;
 let forward cl = cl.current <- cl.current + 1 ;;
