@@ -41,10 +41,10 @@ let global_sm =
                       (*2*) [((Lsymbol(";"), Lany)), (3,7)];
 
                              (* varName [ expression ] *)
-                      (*3*) [((Lsymbol("["), Lany), (4,0))];
+                      (*3*) [((Lsymbol("["), Lany), (5,0))];
                       (*4*) [((Lsymbol("]"), Lop '='), (3,5))];
 
-                      (*5*) [((Lop '=', Lany), (4,0))];
+                      (*5*) [((Lop '=', Lany), (5,0))];
                       (*6*) [((Lsymbol(";"), Lany), (3,7))];
                       (*7*)
                     ] in
@@ -59,7 +59,7 @@ let global_sm =
                              (* string contant *)
                              ((Lstring("str"), Lany), (3,1));
                              (* varName [ expression ] *)
-                             ((Lident "*", Lsymbol "["), )
+                             ((Lident "*", Lsymbol "["), (-1,-1))
                              ];
                       (*1*) [((Lident("*"), Lany), (2,2))];
                       (*2*) [((Lsymbol("("), Lany), (2,3))];
@@ -92,7 +92,7 @@ let global_sm =
                       (*5*) [((Lsymbol(")"), Lop('$')), (6,0)); ((Lsymbol(")"), Lop('$')), (5,6))];
                       (*6*) (*Done*) ] in
       (*6*)
-      let op_sm = [   (*0*) [((Lop("*"), Lsymbol("(")), (-1,-1)); ((Lident("*"), Lsymbol("[")), (-1,-1)); ((Lident("*"), Lany), (6,5)); ((Lsymbol("("), Lany), (4,0)); ((Lsymbol("-"), Lany), (5,0)); ((Lsymbol("~"), Lany), (5,0))];
+      let op_sm = [   (*0*) [((Lop('*'), Lsymbol("(")), (-1,-1)); ((Lident("*"), Lsymbol("[")), (-1,-1)); ((Lident("*"), Lany), (6,5)); ((Lsymbol("("), Lany), (4,0)); ((Lsymbol("-"), Lany), (5,0)); ((Lsymbol("~"), Lany), (5,0))];
                       (*1*) [((Lident(")"), Lany), (6,5))];
                       (*2*) [((Lany, Lany), (-1,-1))];
                       (*3*) [((Lany, Lany), (-1,-1))];
