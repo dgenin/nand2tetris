@@ -1,10 +1,12 @@
 TARGET=jc
-CMX=lexer.cmx parser.cmx jc.cmx
+JCCMX=lexer.cmx parser.cmx jc.cmx
+GENDOTCMX=lexer.cmx statemachine.cmx
+CMX=${JCCMX} ${GENDOTCMX}
 
-jc: $(CMX)
+jc: $(JCCMX)
 	ocamlopt -g $^ -o $@
 
-gendot: lexer.cmx statemachine.cmx
+gendot: GENDOTCMX
 	ocamlopt -g $^ -o $@
 
 sm2.pdf: sm2.dot
@@ -20,4 +22,4 @@ class: $(TARGET)
 	./$< < class.jack
 
 clean:
-	rm -f $(TARGET) $(CMX) $(CMX:.cmx=.cmi) $(CMX:.cmx=.o)
+	rm -f $(TARGET) $(CMX) $(CMX:.cmx=.cmi) $(CMX:.cmx=.o) sm2.ps
