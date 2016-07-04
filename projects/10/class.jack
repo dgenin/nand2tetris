@@ -1,0 +1,10 @@
+class Foo {
+      static int x, y, z;
+      field char u, v, w;
+
+      function char foo(int foo)
+      {
+	var int ii;
+	var char cc;
+      }
+}

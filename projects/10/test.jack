@@ -1,0 +1,18 @@
+class foo{
+    static int x,y,z;
+    /* comment */
+    static char c;
+    static void p;
+}
+/* test */
+class Foo {
+      static int x, y, z;
+      /* comment */
+      field char u, v, w;
+
+      function foo(int foo)
+      {
+        var int foo;
+      }
+}
+
