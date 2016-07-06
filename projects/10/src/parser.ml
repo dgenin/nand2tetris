@@ -110,6 +110,7 @@ let parse_sub_params cl =
   (* reads subroutine parameters, including the closing parenthesis *)
   let rec get_params cl param_defs =
     match cl#next with
+    (*this needs to be fixed.  it does not keep track of invalid transitions. e.g., "(,)" would be accepted *)
       Lsymbol ")" -> param_defs
     | Lsymbol "," -> get_params cl param_defs
     | Lcomment _ -> raise (ParserError "Comments not supported in parameter declaration lists")
@@ -190,7 +191,8 @@ let rec parse_sub_body cl =
 (* Parse class subroutine definitions *)
 let rec parse_class_subs cl =
   match cl#next with
-    Lkeyword "function" -> let ret_type = get_type cl#next in
+    Lkeyword "function" -> 
+         let ret_type = get_type cl#next in
 			   let fun_name = get_ident cl#next in
 			   let fun_params = parse_sub_params cl in
 			   let (fun_vars, fun_statements) = parse_sub_body cl in
