@@ -231,10 +231,15 @@ let rec parse_class_vars cl var_defs =
 (* Parse class definition *)
 let parse_class cl =
   match cl#next with
-    Lident class_name -> (match cl#next with
-			    Lsymbol "{" -> List.map declaration_print (parse_class_vars cl []); 
-          Dclass (class_name, (parse_class_vars cl []), (parse_class_subs cl))
-			  | _ -> raise (ParserError ""))
+    Lident class_name -> 
+      (match cl#next with
+			    Lsymbol "{" -> 
+            let vars_defs = parse_class_vars cl [] in
+            let subs_defs = parse_class_subs cl in
+              List.iter declaration_print vars_defs; 
+          Dclass (class_name, vars_defs, subs_defs)
+			  | _ -> raise (ParserError "")
+      )
   | _ -> raise (ParserError "Syntax error in class declaration");;
 
 let rec parse cl =
