@@ -1,13 +1,14 @@
 TARGET=jc gendot
-JCCMX=lexer.cmx parser.cmx jc.cmx
-GENDOTCMX=lexer.cmx statemachine.cmx
+JCCMX=src/lexer.cmx src/parser.cmx src/jc.cmx
+GENDOTCMX=src/lexer.cmx src/statemachine.cmx
 CMX=${JCCMX} ${GENDOTCMX}
+INC=-I src
 
 jc: $(JCCMX)
-	ocamlopt -g $^ -o $@
+	ocamlopt ${INC} -g $^ -o $@
 
 gendot: $(GENDOTCMX)
-	ocamlopt -g $^ -o $@
+	ocamlopt ${INC} -g $^ -o $@
 
 sm.ps:sm.dot
 	dot -Tps2 $^ -o $@
@@ -16,7 +17,7 @@ sm.ps:sm.dot
 	./gendot > $@
 
 %.cmx:%.ml
-	ocamlopt -c $^
+	ocamlopt ${INC} -c $^
 
 test: $(TARGET)
 	./$< < test.jack
