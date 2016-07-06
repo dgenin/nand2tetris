@@ -207,20 +207,22 @@ let rec parse_class_subs cl =
 (* Parse class variable declarations *)
 let rec parse_class_vars cl var_defs =
   (* translate scope keyword into scope type*)
-  let get_scope token = match token with
+  let get_scope token = 
+    match token with
       Lkeyword "static" -> Some STATIC
     | Lkeyword "field" -> Some FIELD
     | _ -> None in
   (* parse the list of variable names *)
-  let rec get_name cl names = match cl#next with
-	Lident name -> get_name cl (name::names)
+  let rec get_name cl names = 
+    match cl#next with
+	      Lident name -> get_name cl (name::names)
       | Lsymbol "," -> get_name cl names
       | Lsymbol ";" -> names
       | _ -> raise (ParserError "Syntax error in class variable declaration") in
-  match cl#peek with
-       _ as t -> match (get_scope t) with
-	   (* if the token is a scope definition this is a variable declaration *)
-	   | Some (STATIC | FIELD as vscope) -> cl#advance; let vtype = get_type cl#next in
+  let t = cl#peek in
+    match (get_scope t) with
+	      (* if the token is a scope definition this is a variable declaration *)
+	    | Some (STATIC | FIELD as vscope) -> cl#advance; let vtype = get_type cl#next in
 						let more_vars = List.map (fun name -> Dclass_var (vscope, vtype, name)) (get_name cl [])
 						in cl#advance; parse_class_vars cl (List.concat [var_defs; more_vars]);
 	   (* otherwise, we are done with class variable declaration block, so rewind the lexer for the token to be read again *)
