@@ -69,11 +69,11 @@ let scope_to_string scope =
 let rec declaration_print decl =
   match decl with
   | Dclass (class_name, class_vars, class_subs) ->
-     print_string ("Class: " ^ class_name ^ "\n");
-     print_string "Class variables: \n";
-     List.map declaration_print class_vars;
+     print_endline ("Class: " ^ class_name );
+     print_endline "Class variables: ";
+     List.iter declaration_print class_vars;
      print_string "\nClass subroutines\n";
-     List.map declaration_print class_subs;
+     List.iter declaration_print class_subs;
      print_string ""
   | Dclass_var (var_scope, var_type, var_name) -> print_string (var_name ^ " " ^ (type_to_string var_type) ^ " " ^(scope_to_string var_scope) ^ "\n")
   | Dsub_param (var_type, var_name) -> print_string ((type_to_string var_type) ^ " " ^ var_name ^ " ")
@@ -82,8 +82,9 @@ let rec declaration_print decl =
      print_string ("Scope: " ^ (sub_type_to_string sub_type) ^ "\n");
      print_string ("Returns: " ^ (type_to_string ret_type) ^ "\n");
      print_string ("Params: ");
-     List.map declaration_print param_list;
-     List.map declaration_print var_list;
+     List.iter declaration_print param_list; print_newline ();
+     print_string "Vars: ";
+     List.iter declaration_print var_list;
      print_string "\n"
   | _ -> print_string "whatever";;
 
