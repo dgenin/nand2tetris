@@ -3,9 +3,9 @@ open Lexer
 (*** Parser ***)
 
 type unr_op = UMINUS | NOT  ;;
-type bin_op = PLUS | MINUS | MULT | DIV
-	     | EQUAL | LESS | GREAT | DIFF
-	     | AND | OR  ;;
+type bin_op = PLUS | MINUS | MULT | DIV |
+              EQUAL | LESS | GREAT | DIFF |
+              AND | OR  ;;
 type brace = LBRACE | RBRACE;;
 type brack = LBRACK | RBRACK ;;
 type paren = LPAREN | RPAREN ;;
@@ -129,17 +129,17 @@ let parse_sub_params cl =
 (* Parse subroutine variables *)
 let rec parse_sub_vars cl var_defs =
   (* parse the list of variable names *)
-  let rec get_name cl names = match cl#next with
-	Lident name -> get_name cl (name::names)
-      | Lsymbol "," -> get_name cl names
-      | Lsymbol ";" -> names
-      | _ as t -> lexeme_print t; raise (ParserError "Syntax error in subroutine variable declaration")
-in
-  print_endline "parsing local variables";
+  let rec get_name cl names =
+    match cl#next with
+      Lident name -> get_name cl (name::names)
+    | Lsymbol "," -> get_name cl names
+    | Lsymbol ";" -> names
+    | _ as t -> lexeme_print t; raise (ParserError "Syntax error in subroutine variable declaration")
+  in
   match cl#peek with
-   Lkeyword "var" -> cl#advance; let vtype = get_type cl#next in
-		      let more_vars = List.map (fun name -> Dsub_var (vtype, name)) (get_name cl [])
-		      in print_endline "var keyword"; parse_sub_vars cl (List.concat [var_defs; more_vars])
+    Lkeyword "var" -> cl#advance; let vtype = get_type cl#next in
+              let more_vars = List.map (fun name -> Dsub_var (vtype, name)) (get_name cl [])
+    in print_endline "var keyword"; parse_sub_vars cl (List.concat [var_defs; more_vars])
   | _ as l -> lexeme_print l; var_defs
 ;;
 
@@ -155,10 +155,10 @@ and parse_while_statement cl statements =
   match cl#next with
     Lcomment _ -> parse_while_statement cl statements
   | Lsymbol "{" -> print_string "while {"; (match cl#next with
-		     Lcomment _ -> parse_let_statement cl statements
-		   | Lsymbol "}" -> statements
-		   | Lend -> raise (ParserError "Reached end of file in let\n")
-		   | _ -> parse_sub_statements cl statements)
+             Lcomment _ -> parse_let_statement cl statements
+           | Lsymbol "}" -> statements
+           | Lend -> raise (ParserError "Reached end of file in let\n")
+           | _ -> parse_sub_statements cl statements)
   | _ -> parse_while_statement cl statements
 and  parse_do_statement cl statements = statements
 and  parse_return_statement cl statements = statements
@@ -184,8 +184,8 @@ let rec parse_sub_body cl =
   match cl#next with
     Lcomment _ -> parse_sub_body cl
   | Lsymbol "{" -> let vars = parse_sub_vars cl [] in
-		   let statements = parse_sub_statements cl [] in
-		   (vars, statements)
+           let statements = parse_sub_statements cl [] in
+           (vars, statements)
   | _ -> raise (ParserError "Missing { in function body\n")
 ;;
 
@@ -205,54 +205,58 @@ let parse_class_subs cl =
       let (fun_vars, fun_statements) = parse_sub_body cl in
       [Dsub (funtype, ret_type, fun_name, fun_params, fun_vars, fun_statements)]
   | Lkeyword "constructor" -> let ret_type = get_type cl#next in
-			      let con_name = get_ident cl#next in
-			      let con_params = parse_sub_params cl in
-			      let con_vars = parse_sub_vars cl [] in
-			      [Dsub (CONSTRUCTOR, ret_type, con_name, con_params, con_vars, [])]
+                  let con_name = get_ident cl#next in
+                  let con_params = parse_sub_params cl in
+                  let con_vars = parse_sub_vars cl [] in
+                  [Dsub (CONSTRUCTOR, ret_type, con_name, con_params, con_vars, [])]
   | _ as l -> print_endline "No match for:"; lexeme_print l; []
 ;;
 
 (* Parse class variable declarations *)
 let rec parse_class_vars cl var_defs =
   (* translate scope keyword into scope type*)
-  let get_scope token = 
+  let get_scope token =
     match token with
       Lkeyword "static" -> Some STATIC
     | Lkeyword "field" -> Some FIELD
     | _ -> None in
   (* parse the list of variable names *)
-  let rec get_name cl names = 
+  let rec get_name cl names =
     match cl#next with
-	      Lident name -> get_name cl (name::names)
-      | Lsymbol "," -> get_name cl names
-      | Lsymbol ";" -> names
-      | _ -> raise (ParserError "Syntax error in class variable declaration") in
+      Lident name -> get_name cl (name::names)
+    | Lsymbol "," -> get_name cl names
+    | Lsymbol ";" -> names
+    | _ -> raise (ParserError "Syntax error in class variable declaration") in
   let t = cl#peek in
-    match (get_scope t) with
-	      (* if the token is a scope definition this is a variable declaration *)
-	    | Some (STATIC | FIELD as vscope) -> cl#advance; let vtype = get_type cl#next in
-						let more_vars = List.map (fun name -> Dclass_var (vscope, vtype, name)) (get_name cl [])
-						in cl#advance; parse_class_vars cl (List.concat [var_defs; more_vars]);
-	   (* otherwise, we are done with class variable declaration block, so rewind the lexer for the token to be read again *)
-	   | None -> var_defs;;
+  match (get_scope t) with
+  (* if the token is a scope definition this is a variable declaration *)
+    Some (STATIC | FIELD as vscope) ->
+    (
+      cl#advance;
+      let vtype = get_type cl#next in
+      let more_vars = List.map (fun name -> Dclass_var (vscope, vtype, name)) (get_name cl []) in
+      parse_class_vars cl (List.concat [var_defs; more_vars]);
+    )
+  (* otherwise, we are done with class variable declaration block, so rewind the lexer for the token to be read again *)
+  | None -> var_defs;;
 
 (* Parse class definition *)
 let parse_class cl =
   match cl#next with
-    Lident class_name -> 
-      (match cl#next with
-			    Lsymbol "{" -> 
-            let vars_defs = parse_class_vars cl [] in
-            let subs_defs = parse_class_subs cl in
-              List.iter declaration_print vars_defs; 
-          Dclass (class_name, vars_defs, subs_defs)
-			  | _ -> raise (ParserError "")
-      )
+    Lident class_name ->
+    (
+      match cl#next with
+        Lsymbol "{" ->
+        let vars_defs = parse_class_vars cl [] in
+        let subs_defs = parse_class_subs cl in
+        List.iter declaration_print vars_defs;
+        Dclass (class_name, vars_defs, subs_defs)
+      | _ -> raise (ParserError "")
+    )
   | _ -> raise (ParserError "Syntax error in class declaration");;
 
 let rec parse cl =
   let token = cl#next in
-  lexeme_print token;
   match token with
     Lkeyword kwd -> (match kwd with
 		      "class" -> parse_class cl
