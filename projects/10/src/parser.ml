@@ -122,9 +122,9 @@ let parse_sub_params cl =
           | Lsymbol "," -> get_params cl (List.concat [param_defs; [Dsub_param (param_type, param_name)]])
           | _ as t -> lexeme_print t; raise (ParserError "Invalid token in subroutine parameter declaration")
   in
-  match cl#next with
-    Lsymbol "(" -> get_params cl []
-  | _ as t -> lexeme_print t; raise (ParserError "Missing open parenthesis in subroutine parameter declaration");;
+    match cl#next with
+      Lsymbol "(" -> get_params cl []
+    | _ as t -> lexeme_print t; raise (ParserError "Missing open parenthesis in subroutine parameter declaration");;
 
 (* Parse subroutine variables *)
 let rec parse_sub_vars cl var_defs =
