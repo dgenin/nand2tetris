@@ -190,7 +190,12 @@ let rec parse_sub_body cl =
 ;;
 
 (* Parse class subroutine definitions *)
-let rec parse_class_subs cl =
+let parse_class_subs cl =
+  let string_to_funtype s =
+    if s = "method" then METHOD
+    else if s = "function" then FUNCTION
+    else raise (ParserError ("Invalid function type" ^ s))
+  in
   match cl#next with
     Lkeyword "function" -> 
          let ret_type = get_type cl#next in
