@@ -72,15 +72,17 @@ let rec declaration_print decl =
      print_endline ("Class: " ^ class_name );
      print_endline "Class variables: ";
      List.iter declaration_print class_vars;
-     print_string "\nClass subroutines\n";
+     print_endline "\nClass subroutines";
      List.iter declaration_print class_subs;
      print_string ""
-  | Dclass_var (var_scope, var_type, var_name) -> print_string (var_name ^ " " ^ (type_to_string var_type) ^ " " ^(scope_to_string var_scope) ^ "\n")
-  | Dsub_param (var_type, var_name) -> print_string ((type_to_string var_type) ^ " " ^ var_name ^ " ")
+  | Dclass_var (var_scope, var_type, var_name) ->
+     print_endline (var_name ^ " " ^ (type_to_string var_type) ^ " " ^(scope_to_string var_scope))
+  | Dsub_param (var_type, var_name) | Dsub_var (var_type, var_name) ->
+     print_string ((type_to_string var_type) ^ " " ^ var_name ^ " ")
   | Dsub (sub_type, ret_type, sub_name, param_list, var_list, body) ->
-     print_string ("Subroutine: " ^ sub_name ^ "\n");
-     print_string ("Scope: " ^ (sub_type_to_string sub_type) ^ "\n");
-     print_string ("Returns: " ^ (type_to_string ret_type) ^ "\n");
+     print_endline ("Subroutine: " ^ sub_name );
+     print_endline ("Scope: " ^ (sub_type_to_string sub_type) );
+     print_endline ("Returns: " ^ (type_to_string ret_type) );
      print_string ("Params: ");
      List.iter declaration_print param_list; print_newline ();
      print_string "Vars: ";
@@ -135,11 +137,11 @@ let rec parse_sub_vars cl var_defs =
       | Lsymbol ";" -> names
       | _ as t -> lexeme_print t; raise (ParserError "Syntax error in subroutine variable declaration")
 in
-  print_string "parsing local variables\n";
+  print_endline "parsing local variables";
   match cl#peek with
    Lkeyword "var" -> cl#advance; let vtype = get_type cl#next in
 		      let more_vars = List.map (fun name -> Dsub_var (vtype, name)) (get_name cl [])
-		      in print_string "var keyword\n"; parse_sub_vars cl (List.concat [var_defs; more_vars])
+		      in print_endline "var keyword"; parse_sub_vars cl (List.concat [var_defs; more_vars])
   | _ as l -> lexeme_print l; var_defs
 ;;
 
@@ -164,17 +166,17 @@ and  parse_do_statement cl statements = statements
 and  parse_return_statement cl statements = statements
 and  parse_sub_statements cl statements =
   match cl#next with
-    Lkeyword "if" -> print_string "if\n"; 
+    Lkeyword "if" -> print_endline "if";
     parse_sub_statements cl (List.concat [statements; parse_if_statement cl statements])
-  | Lkeyword "let" -> print_string "let\n"; 
+  | Lkeyword "let" -> print_endline "let";
     parse_sub_statements cl ( List.concat [statements; parse_let_statement cl statements])
-  | Lkeyword "while" -> print_string "while\n"; 
+  | Lkeyword "while" -> print_endline "while";
     parse_sub_statements cl ( List.concat [statements; parse_while_statement cl statements])
-  | Lkeyword "do" -> print_string "do\n"; 
+  | Lkeyword "do" -> print_endline "do";
     parse_sub_statements cl ( List.concat [statements; parse_do_statement cl statements])
-  | Lkeyword "return" -> print_string "return\n"; 
+  | Lkeyword "return" -> print_endline "return";
     parse_sub_statements cl ( List.concat [statements; parse_return_statement cl statements])
-  | Lsymbol "}" -> print_string "}\n"; statements
+  | Lsymbol "}" -> print_endline "}"; statements
   | Lend -> raise (ParserError "Missing } in function\n")
   | _ as t -> print_string "parse_sub_statements: "; lexeme_print t; []
 ;;
