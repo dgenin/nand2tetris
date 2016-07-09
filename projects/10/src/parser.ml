@@ -209,6 +209,7 @@ let parse_class_subs cl =
                   let con_params = parse_sub_params cl in
                   let con_vars = parse_sub_vars cl [] in
                   [Dsub (CONSTRUCTOR, ret_type, con_name, con_params, con_vars, [])]
+  | Lsymbol "}" -> [] (* end of class without a subroutine *)
   | _ as l -> print_endline "No match for:"; lexeme_print l; []
 ;;
 
