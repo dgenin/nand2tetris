@@ -258,17 +258,17 @@ let parse_class cl =
 let rec parse cl =
   let token = cl#next in
   match token with
-    Lkeyword kwd -> (match kwd with
-		      "class" -> parse_class cl
-		    | _ -> raise (ParserError "Unexpected keyword at top level"))
+    Lkeyword kwd ->
+    if kwd = "class" then parse_class cl
+    else raise (ParserError "Unexpected keyword at top level")
   | Lcomment _ -> parse cl
   | _ -> raise (ParserError "Unexpected statement at top level");;
 
 let scanner cl =
   let token = cl#next in
   match token with
-    Lkeyword kwd -> (match kwd with
-		      "class" -> parse_class cl
-		    | _ -> raise (ParserError "Unexpected keyword at top level"))
+    Lkeyword kwd ->
+    if kwd = "class" then parse_class cl
+    else raise (ParserError "Unexpected keyword at top level")
   | Lcomment _ -> parse cl
   | _ -> raise (ParserError "Unexpected statement at top level");;
