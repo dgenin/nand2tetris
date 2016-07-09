@@ -113,9 +113,7 @@ let parse_sub_params cl =
   (* reads subroutine parameters, including the closing parenthesis *)
   let rec get_params cl param_defs =
     match cl#next with
-    (*this needs to be fixed.  it does not keep track of invalid transitions. e.g., "(,)" would be accepted *)
-      Lsymbol ")" -> param_defs
-    | Lsymbol "," -> get_params cl param_defs
+      Lsymbol ")" -> param_defs (* empty param list *)
     | Lcomment _ -> raise (ParserError "Comments not supported in parameter declaration lists")
     | Lkeyword _ as t -> let param_type = get_type t in
 			 let param_name = get_ident cl#next in
