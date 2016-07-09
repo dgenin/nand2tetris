@@ -72,7 +72,7 @@ let rec declaration_print decl =
      print_endline ("Class: " ^ class_name );
      print_endline "Class variables: ";
      List.iter declaration_print class_vars;
-     print_endline "\nClass subroutines";
+     print_endline "Class subroutines";
      List.iter declaration_print class_subs;
      print_string ""
   | Dclass_var (var_scope, var_type, var_name) ->
