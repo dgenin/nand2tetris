@@ -13,5 +13,5 @@ let l = new Lexer.lexeme_list prog in
 (* let state_machine = [[(Lsymbol("{"), 1)]; [(Lsymbol("}"),2); (Lany,1)]] in *)
 
 (* Parse program and print the resulting token list *)
-let dclass = Parser.scanner l in
-  Parser.declaration_print dclass;;
+let dclasses = Parser.scanner l in
+  List.iter Parser.declaration_print dclasses;;

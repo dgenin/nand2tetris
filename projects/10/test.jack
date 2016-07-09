@@ -10,7 +10,7 @@ class Foo {
       /* comment */
       field char u, v, w;
 
-      function foo(int foo)
+      function void foo(int foo)
       {
         var int foo;
       }
