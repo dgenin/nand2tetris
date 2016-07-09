@@ -107,10 +107,12 @@ class lexeme_list prog =
       val lex_list = lexer_list
       val lex_list_len = List.length lexer_list
       method peek = if index < lex_list_len then List.nth lex_list index else Lend
-      method next = let v = List.nth lex_list index in index <- index + 1;
-        match v with
-        | Lcomment _ -> s#next
-        | _ -> skip_comment s; v
+      method next =
+        if index >= lex_list_len then Lend
+        else let v = List.nth lex_list index in index <- index + 1;
+         match v with
+           Lcomment _ -> s#next
+         | _ -> skip_comment s; v
       method advance =
         index <- index + 1;
         skip_comment s

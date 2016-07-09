@@ -256,20 +256,17 @@ let parse_class cl =
     )
   | _ -> raise (ParserError "Syntax error in class declaration");;
 
-let rec parse cl =
+let rec parse cl classes =
   let token = cl#next in
   match token with
     Lkeyword kwd ->
-    if kwd = "class" then parse_class cl
+    if kwd = "class" then (parse_class cl) :: classes
     else raise (ParserError "Unexpected keyword at top level")
-  | Lcomment _ -> parse cl
+  | Lcomment _ -> parse cl classes
+  | Lend -> classes
   | _ -> raise (ParserError "Unexpected statement at top level");;
 
 let scanner cl =
-  let token = cl#next in
-  match token with
-    Lkeyword kwd ->
-    if kwd = "class" then parse_class cl
-    else raise (ParserError "Unexpected keyword at top level")
-  | Lcomment _ -> parse cl
-  | _ -> raise (ParserError "Unexpected statement at top level");;
+  let classes = parse cl [] in
+  List.iter declaration_print classes
+  (* return classes for further processing? *)
