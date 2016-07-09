@@ -197,13 +197,13 @@ let parse_class_subs cl =
     else raise (ParserError ("Invalid function type" ^ s))
   in
   match cl#next with
-    Lkeyword "function" -> 
-         let ret_type = get_type cl#next in
-			   let fun_name = get_ident cl#next in
-			   let fun_params = parse_sub_params cl in
-			   let (fun_vars, fun_statements) = parse_sub_body cl in
-			   [Dsub (FUNCTION, ret_type, fun_name, fun_params, fun_vars, [])]
-  | Lkeyword "method" -> [Dsub (METHOD, get_type cl#next, get_ident cl#next, parse_sub_params cl, parse_sub_vars cl [], [])]
+    Lkeyword k when k = "function" || k = "method" ->
+      let funtype = string_to_funtype k in
+      let ret_type = get_type cl#next in
+      let fun_name = get_ident cl#next in
+      let fun_params = parse_sub_params cl in
+      let (fun_vars, fun_statements) = parse_sub_body cl in
+      [Dsub (funtype, ret_type, fun_name, fun_params, fun_vars, fun_statements)]
   | Lkeyword "constructor" -> let ret_type = get_type cl#next in
 			      let con_name = get_ident cl#next in
 			      let con_params = parse_sub_params cl in
