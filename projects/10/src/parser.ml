@@ -116,15 +116,16 @@ let parse_sub_params cl =
       Lsymbol ")" -> param_defs (* empty param list *)
     | Lcomment _ -> raise (ParserError "Comments not supported in parameter declaration lists")
     | Lkeyword _ as t ->
-        let param_type = get_type t and param_name = get_ident cl#next in
-          match cl#next with
-            Lsymbol ")" -> List.concat [param_defs; [Dsub_param (param_type, param_name)]]
-          | Lsymbol "," -> get_params cl (List.concat [param_defs; [Dsub_param (param_type, param_name)]])
-          | _ as t -> lexeme_print t; raise (ParserError "Invalid token in subroutine parameter declaration")
+      let param_type = get_type t and
+      param_name = get_ident cl#next in
+      match cl#next with
+        Lsymbol ")" -> List.concat [param_defs; [Dsub_param (param_type, param_name)]]
+      | Lsymbol "," -> get_params cl (List.concat [param_defs; [Dsub_param (param_type, param_name)]])
+      | _ as t -> lexeme_print t; raise (ParserError "Invalid token in subroutine parameter declaration")
   in
-    match cl#next with
-      Lsymbol "(" -> get_params cl []
-    | _ as t -> lexeme_print t; raise (ParserError "Missing open parenthesis in subroutine parameter declaration");;
+  match cl#next with
+    Lsymbol "(" -> get_params cl []
+  | _ as t -> lexeme_print t; raise (ParserError "Missing open parenthesis in subroutine parameter declaration");;
 
 (* Parse subroutine variables *)
 let rec parse_sub_vars cl var_defs =
@@ -139,8 +140,8 @@ let rec parse_sub_vars cl var_defs =
   match cl#peek with
     Lkeyword "var" -> cl#advance; let vtype = get_type cl#next in
               let more_vars = List.map (fun name -> Dsub_var (vtype, name)) (get_name cl [])
-    in print_endline "var keyword"; parse_sub_vars cl (List.concat [var_defs; more_vars])
-  | _ as l -> lexeme_print l; var_defs
+    in parse_sub_vars cl (List.concat [var_defs; more_vars])
+  | _ -> var_defs
 ;;
 
 (* Parse subroutine statements *)
@@ -264,7 +265,7 @@ let rec parse cl classes =
     else raise (ParserError "Unexpected keyword at top level")
   | Lcomment _ -> parse cl classes
   | Lend -> classes
-  | _ -> raise (ParserError "Unexpected statement at top level");;
+  | _ as t -> lexeme_print t; raise (ParserError "Unexpected statement at top level");;
 
 let scanner cl =
   let classes = parse cl [] in
