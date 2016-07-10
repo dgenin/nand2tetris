@@ -114,14 +114,16 @@ let parse_sub_params cl =
   let rec get_params cl param_defs =
     match cl#next with
       Lsymbol ")" -> param_defs (* empty param list *)
-    | Lcomment _ -> raise (ParserError "Comments not supported in parameter declaration lists")
     | Lkeyword _ as t ->
-      let param_type = get_type t and
-      param_name = get_ident cl#next in
-      match cl#next with
-        Lsymbol ")" -> List.concat [param_defs; [Dsub_param (param_type, param_name)]]
-      | Lsymbol "," -> get_params cl (List.concat [param_defs; [Dsub_param (param_type, param_name)]])
-      | _ as t -> lexeme_print t; raise (ParserError "Invalid token in subroutine parameter declaration")
+      (
+        let param_type = get_type t and
+        param_name = get_ident cl#next in
+        match cl#next with
+          Lsymbol ")" -> List.concat [param_defs; [Dsub_param (param_type, param_name)]]
+        | Lsymbol "," -> get_params cl (List.concat [param_defs; [Dsub_param (param_type, param_name)]])
+        | _ as t -> lexeme_print t; raise (ParserError "Invalid token in subroutine parameter declaration")
+      )
+    | _ as t -> lexeme_print t; raise (ParserError "Unexpected lexeme")
   in
   match cl#next with
     Lsymbol "(" -> get_params cl []
