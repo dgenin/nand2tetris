@@ -20,10 +20,10 @@ sm.ps:sm.dot
 	ocamlopt ${INC} -c $^
 
 test: $(TARGET)
-	./$< < test.jack
+	./$< test.jack
 
 class: $(TARGET)
-	./$< < class.jack
+	./$< class.jack
 
 clean:
 	rm -f $(TARGET) $(CMX) $(CMX:.cmx=.cmi) $(CMX:.cmx=.o) sm.ps sm.dot
