@@ -66,6 +66,82 @@ let scope_to_string scope =
     | STATIC -> "static"
     | FIELD -> "field";;
 
+let kwd_to_string kwd =
+  match kwd with
+    TRUE -> "true"
+  | FALSE -> "false"
+  | NULL -> "null"
+  | THIS -> "this"
+;;
+
+let unr_op_to_string unr_op =
+  match unr_op with
+    UMINUS -> "-"
+  | NOT -> "!"
+;;
+
+let bin_op_to_string bin_op =
+  match bin_op with
+    PLUS -> "+"
+    | MINUS -> "-"
+    | MULT -> "*"
+    | DIV -> "/"
+    | EQUAL -> "="
+    | LESS -> "<"
+    | GREAT -> ">"
+    | DIFF -> "-"
+    | AND -> "&"
+    | OR -> "|"
+;;
+
+let rec expression_print e =
+  match e with
+    Eint_const i -> print_int i; print_newline ()
+  | Estr_const s -> print_string s; print_newline ()
+  | Ekwd_const k -> print_string (kwd_to_string k); print_newline ()
+  | Eunr_exp (unr_op, exp) ->
+    print_string (unr_op_to_string unr_op);
+    print_newline ();
+    expression_print exp
+  | Ebin_exp (exp1, bin_op, exp2) ->
+    expression_print exp1;
+    print_string (bin_op_to_string bin_op);
+    print_newline ();
+    expression_print exp2
+  | Evar identifier -> print_endline identifier
+  | Earray_elem (identifier, i) ->
+    print_endline (identifier ^ "[" ^ (string_of_int i) ^ "]")
+;;
+
+let rec statement_print st =
+  match st with
+    Slist statements ->
+    (
+      match statements with
+        h::t -> statement_print h; statement_print (Slist t)
+      | [] -> ()
+    )
+  | Slet (identifier, expression) ->
+    print_string ("let " ^ identifier ^ "=");
+    expression_print expression;
+  | Sif (expression, statements1, statements2) ->
+    expression_print expression;
+    statement_print (Slist statements1);
+    statement_print (Slist statements2)
+  | Swhile (expression, statements) ->
+    expression_print expression;
+    statement_print (Slist statements)
+  | Sdo (identifier, expressions) ->
+    print_string identifier;
+    List.iter expression_print expressions
+  | Sreturn ret_val ->
+  (
+    match ret_val with
+      None -> print_endline "None"
+    | VAL e -> expression_print e
+  )
+;;
+
 let rec declaration_print decl =
   match decl with
   | Dclass (class_name, class_vars, class_subs) ->
@@ -87,6 +163,8 @@ let rec declaration_print decl =
      List.iter declaration_print param_list; print_newline ();
      print_string "Vars: ";
      List.iter declaration_print var_list;
+     print_endline "\nBody Statements:";
+     List.iter statement_print body;
      print_string "\n"
   | _ -> print_string "whatever";;
 
@@ -146,14 +224,34 @@ let rec parse_sub_vars cl var_defs =
   | _ -> var_defs
 ;;
 
+let parse_expression cl =
+  let parse_expr_inner cl exp =
+    (* will be used to control order *)
+    match cl#next with
+      Lsymbol ";" -> exp
+    | _ -> print_endline "not implemented yet"; exp
+  in
+  match cl#next with
+    (* Add the rest of expression types *)
+    Lint i -> parse_expr_inner cl (Eint_const i)
+  | _ -> print_endline "not implemented yet"; Estr_const "DEADBEEF"
+;;
+
 (* Parse subroutine statements *)
 let rec parse_if_statement cl statements = statements
 and parse_let_statement cl statements =
   match cl#next with
     Lcomment _ -> parse_let_statement cl statements
+  | Lident id -> (* add check that var is defined? *)
+    (
+      match cl#next with
+        Lop '=' -> [Slet (id, (parse_expression cl))]
+      | Lsymbol "[" -> raise (ParserError "arrays not implemented")
+      | _ as t -> lexeme_print t; raise (ParserError "not implemented")
+    )
   | Lsymbol ";" -> statements
   | Lend -> raise (ParserError "Reached end of file in let\n")
-  | _ -> parse_let_statement cl statements
+  | _ as t -> lexeme_print t; raise (ParserError ("Bad"))
 and parse_while_statement cl statements =
   match cl#next with
     Lcomment _ -> parse_while_statement cl statements
