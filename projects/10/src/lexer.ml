@@ -63,9 +63,9 @@ exception LexerError ;;
      | '"'      -> forward cl ;
            let res = Lstring (extract (fun st -> st.[0] <> '"') cl)
            in forward cl ; res
-     | '+' | '-' | '*' | '&' | '|' | '=' | '<' | '>' ->
+     | '+' | '-' | '*' | '&' | '|' | '=' | '<' | '>' | '~' ->
            forward cl; Lop c
-     | '(' | ')' | ',' | ';' | '{' | '}' | '.' | '~'
+     | '(' | ')' | ',' | ';' | '{' | '}' | '.'
      | '[' | ']'  ->
            forward cl; Lsymbol (String.make 1 c)
      | '/'      -> forward cl;

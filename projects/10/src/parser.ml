@@ -239,7 +239,7 @@ let rec parse_sub_vars cl var_defs =
   | _ -> var_defs
 ;;
 
-let parse_expression cl =
+let rec parse_expression cl =
   let parse_expr_inner cl exp =
     (* will be used to control order *)
     match cl#next with
@@ -249,7 +249,19 @@ let parse_expression cl =
   match cl#next with
     (* Add the rest of expression types *)
     Lint i -> parse_expr_inner cl (Eint_const i)
-  | _ -> print_endline "not implemented yet"; Estr_const "DEADBEEF"
+  | Lstring s -> parse_expr_inner cl (Estr_const s)
+  | Lkeyword k when k = "true" || k = "false" || k = "this" || k = "null" ->
+    parse_expr_inner cl (string_to_kwd_const k)
+  | Lident ident ->
+    (
+      if cl#peek = Lsymbol "["
+      (* Add support for varname[idx] *)
+      then raise (ParserError "Not yet")
+      else parse_expr_inner cl (Evar ident)
+    )
+  | Lop s when s = '-' || s = '~' ->
+    Eunr_exp ((string_to_unr_op s), parse_expression cl)
+  | _ as t -> lexeme_print t; print_endline "not implemented yet"; Estr_const "DEADBEEF"
 ;;
 
 (* Parse subroutine statements *)

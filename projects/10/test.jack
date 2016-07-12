@@ -12,8 +12,11 @@ class Foo {
 
       function void foo(int foo)
       {
-        var int foo;
-        let foo = 1;
+        var int foo, bar;
+        var bool b;
+        let foo = -1;
+        let b = ~false;
+        let bar = foo;
       }
 }
 
