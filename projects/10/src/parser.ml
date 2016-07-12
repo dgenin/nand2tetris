@@ -77,7 +77,7 @@ let kwd_to_string kwd =
 let unr_op_to_string unr_op =
   match unr_op with
     UMINUS -> "-"
-  | NOT -> "!"
+  | NOT -> "~"
 ;;
 
 let bin_op_to_string bin_op =
