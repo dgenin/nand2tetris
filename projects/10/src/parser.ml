@@ -74,6 +74,21 @@ let kwd_to_string kwd =
   | THIS -> "this"
 ;;
 
+let string_to_kwd_const s =
+  match s with
+    "true" -> Ekwd_const TRUE
+  | "false" -> Ekwd_const FALSE
+  | "null" -> Ekwd_const NULL
+  | "this" -> Ekwd_const THIS
+  | _ -> raise (Invalid_argument (s ^ " is not a valid kwd const"))
+;;
+
+let string_to_unr_op = function
+    '-' -> UMINUS
+  | '~' -> NOT
+  | _ as s -> raise (Invalid_argument (Char.escaped s ^ " is not a valid unr op"))
+;;
+
 let unr_op_to_string unr_op =
   match unr_op with
     UMINUS -> "-"
