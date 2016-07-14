@@ -83,7 +83,7 @@ let string_to_kwd_const s =
   | _ -> raise (Invalid_argument (s ^ " is not a valid kwd const"))
 ;;
 
-let string_to_unr_op = function
+let char_to_unr_op = function
     '-' -> UMINUS
   | '~' -> NOT
   | _ as s -> raise (Invalid_argument (Char.escaped s ^ " is not a valid unr op"))
@@ -260,7 +260,7 @@ let rec parse_expression cl =
       else parse_expr_inner cl (Evar ident)
     )
   | Lop s when s = '-' || s = '~' ->
-    Eunr_exp ((string_to_unr_op s), parse_expression cl)
+    Eunr_exp ((char_to_unr_op s), parse_expression cl)
   | _ as t -> lexeme_print t; print_endline "not implemented yet"; Estr_const "DEADBEEF"
 ;;
 
