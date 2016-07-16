@@ -239,6 +239,33 @@ let rec parse_sub_vars cl var_defs =
   | _ -> var_defs
 ;;
 
+let parse_term cl =
+  match cl#next with
+    (* Add the rest of expression types *)
+    (* integerConstant *)
+    Lint i -> Eint_const i
+    (* stringConstant *)
+  | Lstring s -> Estr_const s
+    (* keywordConstant *)
+  | Lkeyword k when k = "true" || k = "false" || k = "this" || k = "null" ->
+    string_to_kwd_const k
+    (* varName *)
+  | Lident ident when cl#peek != (Lsymbol "(") && cl#peek != (Lsymbol "[]")->
+    (
+      if cl#peek = Lsymbol "["
+      (* Add support for varname[idx] *)
+      then raise (ParserError "Not yet")
+      else Evar ident
+    )
+    (* varName [ expression ] *)
+  | Lident ident when cl#peek = (Lsymbol "[") ->
+    print_endline (ident ^ ": arrays are not supported yet"); Estr_const "DEADBEEF"
+    (* subroutineCall *)
+  | Lident ident when cl#peek = (Lsymbol "(") || cl#peek = (Lsymbol ".") ->
+    print_endline (ident ^ ": subroutines are not supported yet"); Estr_const "DEADBEEF"
+  | _ as t -> lexeme_print t; print_endline "not implemented yet"; Estr_const "DEADBEEF"
+    ;;
+
 let rec parse_expression cl =
   let parse_expr_inner cl exp =
     (* will be used to control order *)
