@@ -250,7 +250,7 @@ let parse_term cl =
   | Lkeyword k when k = "true" || k = "false" || k = "this" || k = "null" ->
     string_to_kwd_const k
     (* varName *)
-  | Lident ident when cl#peek != (Lsymbol "(") && cl#peek != (Lsymbol "[]")->
+  | Lident ident when cl#peek != (Lsymbol "(") && cl#peek != (Lsymbol "[")->
     (
       if cl#peek = Lsymbol "["
       (* Add support for varname[idx] *)
