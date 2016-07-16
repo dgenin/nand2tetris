@@ -4,8 +4,7 @@ open Lexer
 
 type unr_op = UMINUS | NOT  ;;
 type bin_op = PLUS | MINUS | MULT | DIV |
-              EQUAL | LESS | GREAT | DIFF |
-              AND | OR  ;;
+              EQUAL | LESS | GREAT | AND | OR  ;;
 type brace = LBRACE | RBRACE;;
 type brack = LBRACK | RBRACK ;;
 type paren = LPAREN | RPAREN ;;
@@ -46,6 +45,7 @@ type declaration =
   | Dsub_param of var_type * identifier
   | Dempty;;
 
+exception ParserError of string;;
 
 let type_to_string t =
   match t with
@@ -89,6 +89,19 @@ let char_to_unr_op = function
   | _ as s -> raise (Invalid_argument (Char.escaped s ^ " is not a valid unr op"))
 ;;
 
+let char_to_bin_op = function
+    '+' -> PLUS 
+    | '-' -> MINUS 
+    | '*' -> MULT 
+    | '/' -> DIV 
+    | '=' -> EQUAL 
+    | '<' -> LESS 
+    | '>' -> GREAT 
+    | '&' -> AND 
+    | '|' -> OR
+    | _ as o -> raise (ParserError ("Invalid op" ^ (Char.escaped o)))
+;;
+
 let unr_op_to_string unr_op =
   match unr_op with
     UMINUS -> "-"
@@ -104,7 +117,6 @@ let bin_op_to_string bin_op =
     | EQUAL -> "="
     | LESS -> "<"
     | GREAT -> ">"
-    | DIFF -> "-"
     | AND -> "&"
     | OR -> "|"
 ;;
@@ -183,7 +195,6 @@ let rec declaration_print decl =
      print_string "\n"
   | _ -> print_string "whatever";;
 
-exception ParserError of string;;
 (* Parse the class subroutines *)
 
 (* translate type keyword to type type*)
@@ -239,7 +250,14 @@ let rec parse_sub_vars cl var_defs =
   | _ -> var_defs
 ;;
 
-let parse_term cl =
+exception OpError;;
+
+let parse_op cl =
+  match cl#next with
+    Lop o -> Some (char_to_bin_op o)
+  | _ -> cl#rewind; None
+
+let rec parse_term cl =
   match cl#next with
     (* Add the rest of expression types *)
     (* integerConstant *)
@@ -249,6 +267,8 @@ let parse_term cl =
     (* keywordConstant *)
   | Lkeyword k when k = "true" || k = "false" || k = "this" || k = "null" ->
     string_to_kwd_const k
+  | Lop s when s = '-' || s = '~' ->
+    Eunr_exp ((char_to_unr_op s), parse_term cl)
     (* varName *)
   | Lident ident when cl#peek != (Lsymbol "(") && cl#peek != (Lsymbol "[")->
     (
@@ -257,6 +277,8 @@ let parse_term cl =
       then raise (ParserError "Not yet")
       else Evar ident
     )
+    (* ( expression ) *)
+  | Lsymbol "(" -> print_endline (": (expressions ) are not supported yet"); Estr_const "DEADBEEF"
     (* varName [ expression ] *)
   | Lident ident when cl#peek = (Lsymbol "[") ->
     print_endline (ident ^ ": arrays are not supported yet"); Estr_const "DEADBEEF"
@@ -267,6 +289,21 @@ let parse_term cl =
     ;;
 
 let rec parse_expression cl =
+  match (parse_term cl) with
+  Eint_const _ 
+  | Estr_const _ 
+  | Ekwd_const _ 
+  | Evar _
+  | Eunr_exp _ as e -> 
+  (
+    match parse_op cl with
+      Some bin_op ->  Ebin_exp (e, bin_op, (parse_expression cl))
+    | None -> e
+  )
+  | _ -> raise (ParserError "Not supported yet")
+  ;;
+
+(*
   let parse_expr_inner cl exp =
     (* will be used to control order *)
     match cl#next with
@@ -290,6 +327,7 @@ let rec parse_expression cl =
     Eunr_exp ((char_to_unr_op s), parse_expression cl)
   | _ as t -> lexeme_print t; print_endline "not implemented yet"; Estr_const "DEADBEEF"
 ;;
+*)
 
 (* Parse subroutine statements *)
 let rec parse_if_statement cl statements = statements
@@ -299,7 +337,7 @@ and parse_let_statement cl statements =
   | Lident id -> (* add check that var is defined? *)
     (
       match cl#next with
-        Lop '=' -> [Slet (id, (parse_expression cl))]
+        Lop '=' -> let tmp = [Slet (id, (parse_expression cl))] in cl#advance; tmp
       | Lsymbol "[" -> raise (ParserError "arrays not implemented")
       | _ as t -> lexeme_print t; raise (ParserError "not implemented")
     )

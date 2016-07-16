@@ -95,11 +95,20 @@ let lex_all prog =
         | _  -> rec_lex_all cl (lex_list@[lm]) in
   rec_lex_all cl [];;
 
-let rec skip_comment cl =
-  match cl#peek with
-    Lcomment _ -> cl#advance; skip_comment cl
-  | _ -> ()
-
+let rec skip_comment cl ?(dir=1) () =
+  if dir > 0 then
+  begin
+    match cl#peek with
+      Lcomment _ -> cl#advance; skip_comment cl ()
+    | _ -> ()
+  end
+  else
+  begin
+    match cl#peek with
+      Lcomment _ -> cl#rewind; skip_comment cl ~dir:dir ()
+    | _ -> ()
+  end
+ 
 class lexeme_list prog =
     let lexer_list = lex_all prog in
     object (s)
@@ -112,9 +121,12 @@ class lexeme_list prog =
         else let v = List.nth lex_list index in index <- index + 1;
          match v with
            Lcomment _ -> s#next
-         | _ -> skip_comment s; v
+         | _ -> skip_comment s (); v
       method advance =
         index <- index + 1;
-        skip_comment s
+        skip_comment s ()
+      method rewind =
+        index <- index - 1;
+        skip_comment s ~dir:0 () 
       method get_list = lex_list
 end;;
