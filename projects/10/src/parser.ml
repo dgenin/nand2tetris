@@ -121,26 +121,29 @@ let bin_op_to_string bin_op =
     | OR -> "|"
 ;;
 
-let rec expression_print e =
+let rec expression_print ?indent:(indent=0) e =
   match e with
-    Eint_const i -> print_int i; print_newline ()
-  | Estr_const s -> print_string s; print_newline ()
-  | Ekwd_const k -> print_string (kwd_to_string k); print_newline ()
+    Eint_const i -> print_string (String.make (2*indent) ' '); print_string "<intConst> "; print_int i; print_endline " </intConst>";
+  | Estr_const s -> print_string (String.make (2*indent) ' '); print_string "<strConst> "; print_string s; print_endline " </strConst>";
+  | Ekwd_const k -> print_string (String.make (2*indent) ' '); print_string "<keyword> "; print_string (kwd_to_string k); print_endline " </keyword>";
   | Eunr_exp (unr_op, exp) ->
-    print_string (unr_op_to_string unr_op);
-    print_newline ();
-    expression_print exp
+    print_string (String.make (2*indent) ' '); print_endline "<term>";
+    print_string (String.make (2*indent+2) ' '); print_endline ("<unaryOp> " ^ (unr_op_to_string unr_op) ^ " </unaryOp>");
+    print_string (String.make (2*indent+2) ' '); print_endline "<expression>"; 
+    expression_print ~indent:(indent+2) exp;
+    print_string (String.make (2*indent+2) ' '); print_endline "</expression>"
   | Ebin_exp (exp1, bin_op, exp2) ->
-    expression_print exp1;
-    print_string (bin_op_to_string bin_op);
-    print_newline ();
-    expression_print exp2
-  | Evar identifier -> print_endline identifier
+    print_string (String.make (2*indent) ' '); print_endline "<expression>";
+    print_string (String.make (2*indent+2) ' '); print_endline ("<binOp> " ^ (bin_op_to_string bin_op) ^ " </binOp>");
+    expression_print ~indent:(indent+2) exp1;
+    expression_print ~indent:(indent+2) exp2;
+    print_string (String.make (2*indent) ' '); print_endline "</expression>";
+  | Evar identifier -> print_string (String.make (2*indent) ' '); print_endline ("<ident> " ^ identifier ^ " </ident>");
   | Earray_elem (identifier, i) ->
     print_endline (identifier ^ "[" ^ (string_of_int i) ^ "]")
 ;;
 
-let rec statement_print st =
+let rec statement_print ?indent:(indent=0) st =
   match st with
     Slist statements ->
     (
@@ -149,8 +152,12 @@ let rec statement_print st =
       | [] -> ()
     )
   | Slet (identifier, expression) ->
-    print_string ("let " ^ identifier ^ "=");
-    expression_print expression;
+    print_string (String.make (2*indent) ' '); print_endline "<letStmt>";
+    print_string (String.make (2*indent+2) ' '); print_endline ("<letLVal> " ^ identifier ^ " </letLVal>");
+    print_string (String.make (2*indent+2) ' '); print_endline "<letRVal>";
+    expression_print ~indent:(indent+2) expression;
+    print_string (String.make (2*indent+2) ' '); print_endline "</letRVal>";
+    print_string (String.make (2*indent) ' '); print_endline "</letStmt>"
   | Sif (expression, statements1, statements2) ->
     expression_print expression;
     statement_print (Slist statements1);
@@ -169,30 +176,45 @@ let rec statement_print st =
   )
 ;;
 
-let rec declaration_print decl =
+let rec declaration_print ?indent:(indent=0) decl =
   match decl with
   | Dclass (class_name, class_vars, class_subs) ->
-     print_endline ("Class: " ^ class_name );
-     print_endline "Class variables: ";
-     List.iter declaration_print class_vars;
-     print_endline "Class subroutines";
-     List.iter declaration_print class_subs;
-     print_string ""
+     print_endline "<classDec>";
+     print_endline ("  <className> " ^ class_name ^ " </className>");
+     List.iter (declaration_print ~indent:2) class_vars;
+     List.iter (declaration_print ~indent:2) class_subs;
+     print_endline "</classDec>"
   | Dclass_var (var_scope, var_type, var_name) ->
-     print_endline (var_name ^ " " ^ (type_to_string var_type) ^ " " ^(scope_to_string var_scope))
-  | Dsub_param (var_type, var_name) | Dsub_var (var_type, var_name) ->
-     print_string ((type_to_string var_type) ^ " " ^ var_name ^ " ")
+     print_string (String.make (2*indent) ' '); print_endline "<classVar>";
+     print_string (String.make (2*indent+2) ' '); print_endline ("<varName> " ^ var_name ^ " </varName>");
+     print_string (String.make (2*indent+2) ' '); print_endline ("<varType> " ^ (type_to_string var_type) ^ " </varType>");
+     print_string (String.make (2*indent+2) ' '); print_endline ("<varScope> " ^ (scope_to_string var_scope) ^ "</varScope>");
+     print_string (String.make (2*indent) ' '); print_endline "</classVar>"
+  | Dsub_param (var_type, var_name) ->
+     print_string (String.make (2*indent) ' '); print_endline "<subParam>";
+     print_string (String.make (2*indent+2) ' '); print_endline ("<paramName> " ^ var_name ^ " </paramName>");
+     print_string (String.make (2*indent+2) ' '); print_endline ("<paramType> " ^ (type_to_string var_type) ^ " </paramType>");
+     print_string (String.make (2*indent) ' '); print_endline "</subParam>";
+| Dsub_var (var_type, var_name) ->
+     print_string (String.make (2*indent) ' '); print_endline "<subVar>";
+     print_string (String.make (2*indent+2) ' '); print_endline ("<varName> " ^ var_name ^ " </varName>");
+     print_string (String.make (2*indent+2) ' '); print_endline ("<varType> " ^ (type_to_string var_type) ^ " </varType>");
+     print_string (String.make (2*indent) ' '); print_endline "</subVar>";
   | Dsub (sub_type, ret_type, sub_name, param_list, var_list, body) ->
-     print_endline ("Subroutine: " ^ sub_name );
-     print_endline ("Scope: " ^ (sub_type_to_string sub_type) );
-     print_endline ("Returns: " ^ (type_to_string ret_type) );
-     print_string ("Params: ");
-     List.iter declaration_print param_list; print_newline ();
-     print_string "Vars: ";
-     List.iter declaration_print var_list;
-     print_endline "\nBody Statements:";
-     List.iter statement_print body;
-     print_string "\n"
+     print_string (String.make (2*indent) ' '); print_endline "<classSub>";
+     print_string (String.make (2*indent+2) ' '); print_endline ("<subName> " ^ sub_name ^ "</subName>");
+     print_string (String.make (2*indent+2) ' '); print_endline ("<subType>" ^ (sub_type_to_string sub_type) ^ "</subType>");
+     print_string (String.make (2*indent+2) ' '); print_endline ("<subRetType> " ^ (type_to_string ret_type) ^ " </subRetType>");
+     print_string (String.make (2*indent+2) ' '); print_endline ("<subParams>");
+     List.iter (declaration_print ~indent:(indent+2)) param_list; 
+     print_string (String.make (2*indent+2) ' '); print_endline "</subParams>";
+     print_string (String.make (2*indent+2) ' '); print_endline "<subVars>";
+     List.iter (declaration_print ~indent:(indent+2)) var_list;
+     print_string (String.make (2*indent+2) ' '); print_endline "</subVars>";
+     print_string (String.make (2*indent+2) ' '); print_endline "<subStmts>";
+     List.iter (statement_print ~indent:(indent+2)) body;
+     print_string (String.make (2*indent+2) ' '); print_endline "</subStmts>";
+     print_string (String.make (2*indent) ' '); print_endline "</classSub>";
   | _ -> print_string "whatever";;
 
 (* Parse the class subroutines *)
