@@ -1,11 +1,10 @@
-Name: FooBar
+Name: JackCompiler
 Version: 0.1
-Synopsis: A library about Foo and Bar.
-Authors: Me <me@myhost.com>
+Synopsis: Compiler for Jack language
+Authors: Ilya Chukhman <ilya.chukhman@gmail.com> and Dan Genin <dan.genin@gmail.com>
 License: LGPL with OCaml linking exception
 
-Description: FooBar allows to combine foo and bar efficiently. It also allows to interface with baz.
-Homepage: http://foobar.org
+Description: Allows parsing and executing Jack programs
 
 OASISFormat: 0.4
 BuildTools: ocamlbuild
@@ -28,3 +27,8 @@ Executable jc
   CompiledObject: best
   BuildDepends: parser, lexer
   Install: false
+
+Test test
+  Run$: flag(tests)
+  Type: Custom (0.4)
+  Command: $jc test.jack
