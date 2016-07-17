@@ -7,3 +7,8 @@ jc
 *.mldylib
 META
 _build
+_tags
+myocamlbuild.ml
+setup.data
+setup.ml
+setup.log
