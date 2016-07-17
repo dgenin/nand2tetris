@@ -1,0 +1,3 @@
+To generate the Makefile do the following:
+
+    oasis setup -setup-update dynamic
