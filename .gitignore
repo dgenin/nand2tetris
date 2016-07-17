@@ -6,3 +6,4 @@ jc
 *.mllib
 *.mldylib
 META
+_build
