@@ -1,3 +1,8 @@
 To generate the Makefile do the following:
 
-    oasis setup -setup-update dynamic
+    oasis setup
+    ocaml setup.ml -configure --enable-tests
+
+To run test:
+
+    make test
