@@ -1,5 +1,7 @@
 open Lexer
 
+open Yojson
+
 (*** Parser ***)
 
 type unr_op = UMINUS | NOT  ;;
@@ -351,6 +353,16 @@ let rec parse_expression cl =
 ;;
 *)
 
+let check_terminal t v =
+  if t = v 
+  then ()
+  else 
+  begin
+    print_string "Expected: "; lexeme_print t;  
+    print_string "\nbut got: "; lexeme_print v; raise (ParserError "")
+  end
+  ;;
+
 (* Parse subroutine statements *)
 let rec parse_if_statement cl statements = statements
 and parse_let_statement cl statements =
@@ -359,7 +371,8 @@ and parse_let_statement cl statements =
   | Lident id -> (* add check that var is defined? *)
     (
       match cl#next with
-        Lop '=' -> let tmp = [Slet (id, (parse_expression cl))] in cl#advance; tmp
+        Lop '=' -> let tmp = [Slet (id, (parse_expression cl))] in 
+        check_terminal (Lsymbol ";") cl#next; tmp
       | Lsymbol "[" -> raise (ParserError "arrays not implemented")
       | _ as t -> lexeme_print t; raise (ParserError "not implemented")
     )
