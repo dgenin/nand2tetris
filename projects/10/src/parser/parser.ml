@@ -92,14 +92,14 @@ let char_to_unr_op = function
 ;;
 
 let char_to_bin_op = function
-    '+' -> PLUS 
-    | '-' -> MINUS 
-    | '*' -> MULT 
-    | '/' -> DIV 
-    | '=' -> EQUAL 
-    | '<' -> LESS 
-    | '>' -> GREAT 
-    | '&' -> AND 
+    '+' -> PLUS
+    | '-' -> MINUS
+    | '*' -> MULT
+    | '/' -> DIV
+    | '=' -> EQUAL
+    | '<' -> LESS
+    | '>' -> GREAT
+    | '&' -> AND
     | '|' -> OR
     | _ as o -> raise (ParserError ("Invalid op" ^ (Char.escaped o)))
 ;;
@@ -131,7 +131,7 @@ let rec expression_print ?indent:(indent=0) e =
   | Eunr_exp (unr_op, exp) ->
     print_string (String.make (2*indent) ' '); print_endline "<term>";
     print_string (String.make (2*indent+2) ' '); print_endline ("<unaryOp> " ^ (unr_op_to_string unr_op) ^ " </unaryOp>");
-    print_string (String.make (2*indent+2) ' '); print_endline "<expression>"; 
+    print_string (String.make (2*indent+2) ' '); print_endline "<expression>";
     expression_print ~indent:(indent+2) exp;
     print_string (String.make (2*indent+2) ' '); print_endline "</expression>"
   | Ebin_exp (exp1, bin_op, exp2) ->
@@ -208,7 +208,7 @@ let rec declaration_print ?indent:(indent=0) decl =
      print_string (String.make (2*indent+2) ' '); print_endline ("<subType>" ^ (sub_type_to_string sub_type) ^ "</subType>");
      print_string (String.make (2*indent+2) ' '); print_endline ("<subRetType> " ^ (type_to_string ret_type) ^ " </subRetType>");
      print_string (String.make (2*indent+2) ' '); print_endline ("<subParams>");
-     List.iter (declaration_print ~indent:(indent+2)) param_list; 
+     List.iter (declaration_print ~indent:(indent+2)) param_list;
      print_string (String.make (2*indent+2) ' '); print_endline "</subParams>";
      print_string (String.make (2*indent+2) ' '); print_endline "<subVars>";
      List.iter (declaration_print ~indent:(indent+2)) var_list;
@@ -314,11 +314,11 @@ let rec parse_term cl =
 
 let rec parse_expression cl =
   match (parse_term cl) with
-  Eint_const _ 
-  | Estr_const _ 
-  | Ekwd_const _ 
+  Eint_const _
+  | Estr_const _
+  | Ekwd_const _
   | Evar _
-  | Eunr_exp _ as e -> 
+  | Eunr_exp _ as e ->
   (
     match parse_op cl with
       Some bin_op ->  Ebin_exp (e, bin_op, (parse_expression cl))
@@ -354,11 +354,11 @@ let rec parse_expression cl =
 *)
 
 let check_terminal t v =
-  if t = v 
+  if t = v
   then ()
-  else 
+  else
   begin
-    print_string "Expected: "; lexeme_print t;  
+    print_string "Expected: "; lexeme_print t;
     print_string "\nbut got: "; lexeme_print v; raise (ParserError "")
   end
   ;;
@@ -371,7 +371,7 @@ and parse_let_statement cl statements =
   | Lident id -> (* add check that var is defined? *)
     (
       match cl#next with
-        Lop '=' -> let tmp = [Slet (id, (parse_expression cl))] in 
+        Lop '=' -> let tmp = [Slet (id, (parse_expression cl))] in
         check_terminal (Lsymbol ";") cl#next; tmp
       | Lsymbol "[" -> raise (ParserError "arrays not implemented")
       | _ as t -> lexeme_print t; raise (ParserError "not implemented")

@@ -108,7 +108,7 @@ let rec skip_comment cl ?(dir=1) () =
       Lcomment _ -> cl#rewind; skip_comment cl ~dir:dir ()
     | _ -> ()
   end
- 
+
 class lexeme_list prog =
     let lexer_list = lex_all prog in
     object (s)
@@ -127,6 +127,6 @@ class lexeme_list prog =
         skip_comment s ()
       method rewind =
         index <- index - 1;
-        skip_comment s ~dir:0 () 
+        skip_comment s ~dir:0 ()
       method get_list = lex_list
 end;;
