@@ -11,7 +11,12 @@ BuildTools: ocamlbuild
 Plugins: META (0.4), DevFiles (0.4)
 
 PreBuildCommand: atdgen -j ./src/parser/grammar.atd; atdgen -t ./src/parser/grammar.atd
+
+# Clean atdgen files
 PostCleanCommand: rm -f src/parser/grammar_*
+
+# Enable testing
+PreBuildCommand: sed -i.bak 's/tests=\"false\"/tests=\"true\"/' setup.data
 
 Library "lexer"
   Path: src/lexer
