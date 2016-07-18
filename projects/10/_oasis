@@ -11,6 +11,7 @@ BuildTools: ocamlbuild
 Plugins: META (0.4), DevFiles (0.4)
 
 PreBuildCommand: atdgen -j ./src/parser/grammar.atd; atdgen -t ./src/parser/grammar.atd
+PostCleanCommand: rm -f src/parser/grammar_*
 
 Library "lexer"
   Path: src/lexer
