@@ -29,4 +29,4 @@ let l = new Lexer.lexeme_list prog in
 
 (* Parse program and print the resulting token list *)
 let dclasses = Parser.scanner l in
-  List.iter (fun c -> Parser.declaration_print c; print_newline ()) dclasses;;
+  List.iter (fun c -> print_endline (Yojson.Safe.prettify (Parser.string_of_declaration c)); ()) dclasses;;
