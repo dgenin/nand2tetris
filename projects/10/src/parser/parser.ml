@@ -115,7 +115,14 @@ let rec parse_term cl =
       else `Evar ident
     )
     (* ( expression ) *)
-  | Lsymbol "(" -> print_endline (": (expressions ) are not supported yet"); `Estr_const "DEADBEEF"
+  | Lsymbol "(" ->
+    (
+      let ex = (parse_expression cl) in
+      let close_paren = cl#next in
+      match close_paren with
+      | Lsymbol ")" -> ex
+      | _ -> lexeme_print close_paren; raise (ParserError " but expecting )")
+    )
     (* varName [ expression ] *)
   | Lident ident when cl#peek = (Lsymbol "[") ->
     print_endline (ident ^ ": arrays are not supported yet"); `Estr_const "DEADBEEF"
@@ -123,21 +130,23 @@ let rec parse_term cl =
   | Lident ident when cl#peek = (Lsymbol "(") || cl#peek = (Lsymbol ".") ->
     print_endline (ident ^ ": subroutines are not supported yet"); `Estr_const "DEADBEEF"
   | _ as t -> lexeme_print t; print_endline "not implemented yet"; `Estr_const "DEADBEEF"
-    ;;
+and
 
-let rec parse_expression cl =
+parse_expression cl =
   match (parse_term cl) with
   `Eint_const _
   | `Estr_const _
   | `Ekwd_const _
   | `Evar _
-  | `Eunr_exp _ as e ->
+  | `Eunr_exp _
+   (* may need to change if we decide to keep parenthesis *)
+  | `Ebin_exp _ as e ->
   (
     match parse_op cl with
       Some bin_op ->  `Ebin_exp (e, bin_op, (parse_expression cl))
     | None -> e
   )
-  | _ -> raise (ParserError "Not supported yet")
+  | _ as l -> print_endline (Yojson.Safe.prettify (Grammar_j.string_of_expression l)); raise (ParserError "Not supported yet")
   ;;
 
 let check_terminal t v =
