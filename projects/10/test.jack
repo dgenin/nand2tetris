@@ -1,9 +1,3 @@
-class foo{
-    static int x,y,z;
-    /* comment */
-    static char c;
-    static void p;
-}
 /* test */
 class Foo {
       static int x, y, z;
@@ -16,7 +10,7 @@ class Foo {
         var bool b;
         let foo = -1;
         let b = ~false;
-        let bar = foo + 7 - 2;
+        let bar = 3 + foo - (7 + 2) - 5;
+        let foo = bar[7+3];
       }
 }
-
