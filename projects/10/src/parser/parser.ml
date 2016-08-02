@@ -111,7 +111,15 @@ let rec parse_term cl =
     (
       if cl#peek = Lsymbol "["
       (* Add support for varname[idx] *)
-      then raise (ParserError "Not yet")
+      then
+      begin
+        cl#next;
+        let ex = `Earray_elem (ident, (parse_expression cl)) in
+        let close_bracket = cl#next in
+        match close_bracket with
+        | Lsymbol "]" -> ex
+        | _ -> lexeme_print close_bracket; raise (ParserError " but expecting ]")
+      end
       else `Evar ident
     )
     (* ( expression ) *)
@@ -141,6 +149,7 @@ parse_expression cl =
   | `Eunr_exp _
    (* may need to change if we decide to keep parenthesis *)
   | `Eparen_exp _
+  | `Earray_elem _
   | `Ebin_exp _ as e ->
   (
     match parse_op cl with
