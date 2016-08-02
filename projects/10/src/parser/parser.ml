@@ -113,7 +113,7 @@ let rec parse_term cl =
       (* Add support for varname[idx] *)
       then
       begin
-        cl#next;
+        cl#advance;
         let ex = `Earray_elem (ident, (parse_expression cl)) in
         let close_bracket = cl#next in
         match close_bracket with
