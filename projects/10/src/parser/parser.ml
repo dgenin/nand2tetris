@@ -117,7 +117,7 @@ let rec parse_term cl =
     (* ( expression ) *)
   | Lsymbol "(" ->
     (
-      let ex = (parse_expression cl) in
+      let ex = `Eparen_exp (parse_expression cl) in
       let close_paren = cl#next in
       match close_paren with
       | Lsymbol ")" -> ex
@@ -140,6 +140,7 @@ parse_expression cl =
   | `Evar _
   | `Eunr_exp _
    (* may need to change if we decide to keep parenthesis *)
+  | `Eparen_exp _
   | `Ebin_exp _ as e ->
   (
     match parse_op cl with
