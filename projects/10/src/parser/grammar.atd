@@ -24,7 +24,7 @@ type expression = [
   | Eunr_exp of (unr_op * expression)
   | Ebin_exp of (expression * bin_op * expression)
   | Evar of identifier
-  | Earray_elem of (identifier * int)
+  | Earray_elem of (identifier * expression)
   | Eparen_exp of expression]
 (*  | Efunc_call of identifier * expression list;;*)
 
