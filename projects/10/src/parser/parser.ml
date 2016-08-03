@@ -130,7 +130,7 @@ let rec parse_term cl =
   )
     (* subroutineCall *)
   | Lident ident when cl#peek = (Lsymbol "(") || cl#peek = (Lsymbol ".") ->
-    print_endline (ident ^ ": subroutines are not supported yet"); `Estr_const "DEADBEEF"
+    `Esubcall (ident, (parse_exp_list cl))
   | _ as t -> lexeme_print t; print_endline "not implemented yet"; `Estr_const "DEADBEEF"
 and
 
@@ -144,6 +144,7 @@ parse_expression cl =
    (* may need to change if we decide to keep parenthesis *)
   | `Eparen_exp _
   | `Earray_elem _
+  | `Esubcall _
   | `Ebin_exp _ as e ->
   (
     match parse_op cl with
@@ -151,6 +152,26 @@ parse_expression cl =
     | None -> e
   )
   | _ as l -> print_endline (Yojson.Safe.prettify (Grammar_j.string_of_expression l)); raise (ParserError "Not supported yet")
+and
+
+(* Parse subroutine expression list *)
+parse_exp_list cl =
+  (* reads subroutine expression list, including the closing parenthesis *)
+  let rec get_params cl exp_list =
+    match cl#peek with
+      Lsymbol ")" -> cl#advance; exp_list (* empty param list *)
+    | _ ->
+      (
+        let exp = parse_expression cl in
+        match cl#next with
+          Lsymbol ")" -> exp::exp_list
+        | Lsymbol "," -> get_params cl (exp::exp_list)
+        | _ as t -> lexeme_print t; raise (ParserError "Invalid token in expression list")
+      )
+  in
+  match cl#next with
+    Lsymbol "(" -> get_params cl []
+  | _ as t -> lexeme_print t; raise (ParserError "Missing open parenthesis in subroutine expression list")
   ;;
 
 let check_terminal t v =

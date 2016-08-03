@@ -1,6 +1,6 @@
 type unr_op = [
-    UMINUS 
-  | NOT 
+  | UMINUS
+  | NOT
 ]
 
 type bin_op = [PLUS | MINUS | MULT | DIV |
@@ -25,7 +25,11 @@ type expression = [
   | Ebin_exp of (expression * bin_op * expression)
   | Evar of identifier
   | Earray_elem of (identifier * expression)
-  | Eparen_exp of expression]
+  | Eparen_exp of expression
+    (* subname, expressionList *)
+  | Esubcall of (identifier * expression list)
+    (* class/var, subname, expressionList *)
+  | Emethcall of (identifier * identifier * expression list)]
 (*  | Efunc_call of identifier * expression list;;*)
 
 type ret_val = [VAL of expression | None]
@@ -41,7 +45,7 @@ type statement = [
 type declaration = [
   | Dclass of (identifier * declaration list * declaration list)
   | Dclass_var of (var_scope * var_type * identifier)
-(* subroutine type, return type, subroutine name, parameter list, local variables, body *)
+  (* subroutine type, return type, subroutine name, parameter list, local variables, body *)
   | Dsub of (sub_type * var_type * identifier * declaration list * declaration list * statement list)
   | Dsub_var of (var_type * identifier)
   | Dsub_param of (var_type * identifier)
