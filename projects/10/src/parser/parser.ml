@@ -107,33 +107,27 @@ let rec parse_term cl =
   | Lop s when s = '-' || s = '~' ->
     `Eunr_exp ((char_to_unr_op s), parse_term cl)
     (* varName *)
-  | Lident ident when cl#peek != (Lsymbol "(") && cl#peek != (Lsymbol "[")->
-    (
-      if cl#peek = Lsymbol "["
-      (* Add support for varname[idx] *)
-      then
-      begin
-        cl#advance;
-        let ex = `Earray_elem (ident, (parse_expression cl)) in
-        let close_bracket = cl#next in
-        match close_bracket with
-        | Lsymbol "]" -> ex
-        | _ -> lexeme_print close_bracket; raise (ParserError " but expecting ]")
-      end
-      else `Evar ident
-    )
+  | Lident ident when cl#peek <> (Lsymbol "(") && cl#peek <> (Lsymbol "[")->
+    `Evar ident
     (* ( expression ) *)
   | Lsymbol "(" ->
     (
-      let ex = `Eparen_exp (parse_expression cl) in
-      let close_paren = cl#next in
+      let ex = `Eparen_exp (parse_expression cl) and
+      close_paren = cl#next in
       match close_paren with
       | Lsymbol ")" -> ex
       | _ -> lexeme_print close_paren; raise (ParserError " but expecting )")
     )
     (* varName [ expression ] *)
   | Lident ident when cl#peek = (Lsymbol "[") ->
-    print_endline (ident ^ ": arrays are not supported yet"); `Estr_const "DEADBEEF"
+  (
+    cl#advance;
+    let ex = `Earray_elem (ident, (parse_expression cl)) and
+    close_bracket = cl#next in
+    match close_bracket with
+    | Lsymbol "]" -> ex
+    | _ -> lexeme_print close_bracket; raise (ParserError " but expecting ]")
+  )
     (* subroutineCall *)
   | Lident ident when cl#peek = (Lsymbol "(") || cl#peek = (Lsymbol ".") ->
     print_endline (ident ^ ": subroutines are not supported yet"); `Estr_const "DEADBEEF"
