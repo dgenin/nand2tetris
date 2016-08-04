@@ -55,7 +55,7 @@ exception LexerError ;;
             | "method" | "field" | "static"
             | "int" | "char" | "boolean"
             | "void" | "true" | "false"
-            | "null" | "this" | "if " | "else"
+            | "null" | "this" | "if" | "else"
             | "while" | "return" | "var" | "let"
             | "do" -> Lkeyword ident
             | _ -> Lident ident)
