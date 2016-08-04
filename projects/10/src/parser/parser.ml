@@ -132,6 +132,16 @@ let rec parse_term cl =
     (* subroutineCall *)
   | Lident ident when cl#peek = (Lsymbol "(") ->
     `Esubcall (ident, (parse_exp_list cl))
+    (* methodCall *)
+  | Lident className when cl#peek = (Lsymbol ".") ->
+    cl#advance;
+    let subName = get_ident cl#next in
+    if cl#peek = (Lsymbol "(") then
+      `Emethcall (className, subName, (parse_exp_list cl))
+    else
+    begin
+      lexeme_print cl#peek; raise (ParserError "but expecting (")
+    end
   | _ as t -> lexeme_print t; print_endline "not implemented yet"; `Estr_const "DEADBEEF"
 and
 
@@ -146,6 +156,7 @@ parse_expression cl =
   | `Eparen_exp _
   | `Earray_elem _
   | `Esubcall _
+  | `Emethcall _
   | `Ebin_exp _ as e ->
   (
     match parse_op cl with

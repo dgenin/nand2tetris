@@ -8,10 +8,12 @@ class Foo {
       {
         var int foo, bar;
         var bool b;
+        var Foo myclass;
         let foo = -1;
         let b = ~false;
         let bar = 3 + foo - (7 + 2) - 5;
         let foo = bar[7+3];
-        let foo = foo(7+8, 9);
+        let foo = b + foo(7+8, 9);
+        let dummy = myclass.mymethod(3, 7+8);
       }
 }
