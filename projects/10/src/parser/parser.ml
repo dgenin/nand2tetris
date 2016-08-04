@@ -107,7 +107,8 @@ let rec parse_term cl =
   | Lop s when s = '-' || s = '~' ->
     `Eunr_exp ((char_to_unr_op s), parse_term cl)
     (* varName *)
-  | Lident ident when cl#peek <> (Lsymbol "(") && cl#peek <> (Lsymbol "[")->
+  | Lident ident when cl#peek <> (Lsymbol "(") && cl#peek <> (Lsymbol "[") &&
+    cl#peek <> (Lsymbol ".") ->
     `Evar ident
     (* ( expression ) *)
   | Lsymbol "(" ->
