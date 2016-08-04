@@ -130,7 +130,7 @@ let rec parse_term cl =
     | _ -> lexeme_print close_bracket; raise (ParserError " but expecting ]")
   )
     (* subroutineCall *)
-  | Lident ident when cl#peek = (Lsymbol "(") || cl#peek = (Lsymbol ".") ->
+  | Lident ident when cl#peek = (Lsymbol "(") ->
     `Esubcall (ident, (parse_exp_list cl))
   | _ as t -> lexeme_print t; print_endline "not implemented yet"; `Estr_const "DEADBEEF"
 and
