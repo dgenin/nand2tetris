@@ -15,5 +15,11 @@ class Foo {
         let foo = bar[7+3];
         let foo = b + foo(7+8, 9);
         let dummy = myclass.mymethod(3, 7+8);
+        if (7 < 5){
+            let foo = 8;
+        } else
+        {
+          let after = 7;
+        }
       }
 }

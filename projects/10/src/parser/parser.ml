@@ -197,7 +197,21 @@ let check_terminal t v =
   ;;
 
 (* Parse subroutine statements *)
-let rec parse_if_statement cl statements = statements
+let rec parse_if_statement cl statements =
+  check_terminal (Lsymbol "(") cl#next;
+  let exp = parse_expression cl in
+  check_terminal (Lsymbol ")") cl#next;
+  check_terminal (Lsymbol "{") cl#next;
+  let if_st = parse_sub_statements cl [] in
+  if cl#peek <> (Lkeyword "else") then  [`Sif (exp, if_st, [])]
+  else
+  begin
+    cl#advance;
+    check_terminal (Lsymbol "{") cl#next;
+    let else_st = parse_sub_statements cl [] in
+    [`Sif (exp, if_st, else_st)]
+  end
+
 and parse_let_statement cl statements =
   match cl#next with
     Lcomment _ -> parse_let_statement cl statements
