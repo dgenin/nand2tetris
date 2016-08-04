@@ -239,15 +239,15 @@ and  parse_do_statement cl statements = statements
 and  parse_return_statement cl statements = statements
 and  parse_sub_statements cl statements =
   match cl#next with
-    Lkeyword "if" -> print_endline "if";
+    Lkeyword "if" ->
     parse_sub_statements cl (List.concat [statements; parse_if_statement cl statements])
-  | Lkeyword "let" -> print_endline "let";
+  | Lkeyword "let" ->
     parse_sub_statements cl ( List.concat [statements; parse_let_statement cl statements])
-  | Lkeyword "while" -> print_endline "while";
+  | Lkeyword "while" ->
     parse_sub_statements cl ( List.concat [statements; parse_while_statement cl statements])
-  | Lkeyword "do" -> print_endline "do";
+  | Lkeyword "do" ->
     parse_sub_statements cl ( List.concat [statements; parse_do_statement cl statements])
-  | Lkeyword "return" -> print_endline "return";
+  | Lkeyword "return" ->
     parse_sub_statements cl ( List.concat [statements; parse_return_statement cl statements])
   | Lsymbol "}" -> print_endline "}"; statements
   | Lend -> raise (ParserError "Missing } in function\n")
