@@ -247,7 +247,7 @@ and  parse_sub_statements cl statements =
     parse_sub_statements cl ( List.concat [statements; parse_do_statement cl statements])
   | Lkeyword "return" ->
     parse_sub_statements cl ( List.concat [statements; parse_return_statement cl statements])
-  | Lsymbol "}" -> print_endline "}"; statements
+  | Lsymbol "}" -> statements
   | Lend -> raise (ParserError "Missing } in function\n")
   | _ as t -> print_string "parse_sub_statements: "; lexeme_print t; []
 ;;
