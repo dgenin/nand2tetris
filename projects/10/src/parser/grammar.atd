@@ -17,6 +17,12 @@ type var_type = [INT | CHAR | BOOLEAN | VOID | CLASS of identifier]
 type var_scope = [STATIC | FIELD]
 type sub_type = [CONSTRUCTOR | FUNCTION | METHOD]
 
+type subroutine_call = [
+    (* subname, expressionList *)
+    Subcall of (identifier * expression list)
+    (* class/var, subname, expressionList *)
+  | Methcall of (identifier * identifier * expression list)]
+
 type expression = [
   | Eint_const of int
   | Estr_const of string
@@ -26,10 +32,7 @@ type expression = [
   | Evar of identifier
   | Earray_elem of (identifier * expression)
   | Eparen_exp of expression
-    (* subname, expressionList *)
-  | Esubcall of (identifier * expression list)
-    (* class/var, subname, expressionList *)
-  | Emethcall of (identifier * identifier * expression list)]
+  | Esubcall of subroutine_call]
 (*  | Efunc_call of identifier * expression list;;*)
 
 type ret_val = [VAL of expression | None]
@@ -39,7 +42,7 @@ type statement = [
   | Slet of (identifier * expression)
   | Sif of (expression * statement list * statement list)
   | Swhile of (expression * statement list)
-  | Sdo of (identifier * expression list)
+  | Sdo of subroutine_call
   | Sreturn of ret_val]
 
 type declaration = [

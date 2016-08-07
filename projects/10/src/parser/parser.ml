@@ -130,18 +130,8 @@ let rec parse_term cl =
     | _ -> lexeme_print close_bracket; raise (ParserError " but expecting ]")
   )
     (* subroutineCall *)
-  | Lident ident when cl#peek = (Lsymbol "(") ->
-    `Esubcall (ident, (parse_exp_list cl))
-    (* methodCall *)
-  | Lident className when cl#peek = (Lsymbol ".") ->
-    cl#advance;
-    let subName = get_ident cl#next in
-    if cl#peek = (Lsymbol "(") then
-      `Emethcall (className, subName, (parse_exp_list cl))
-    else
-    begin
-      lexeme_print cl#peek; raise (ParserError "but expecting (")
-    end
+  | Lident _ when cl#peek = (Lsymbol "(") || cl#peek = (Lsymbol ".") ->
+    cl#rewind; `Esubcall (parse_subroutine_call cl)
   | _ as t -> lexeme_print t; print_endline "not implemented yet"; `Estr_const "DEADBEEF"
 and
 
@@ -156,7 +146,6 @@ parse_expression cl =
   | `Eparen_exp _
   | `Earray_elem _
   | `Esubcall _
-  | `Emethcall _
   | `Ebin_exp _ as e ->
   (
     match parse_op cl with
@@ -183,6 +172,24 @@ and parse_exp_list cl =
   match cl#next with
     Lsymbol "(" -> get_params cl []
   | _ as t -> lexeme_print t; raise (ParserError "Missing open parenthesis in subroutine expression list")
+
+ (* Parse subroutine call*)
+ and parse_subroutine_call cl =
+  match cl#next with
+     (* subroutineCall *)
+  | Lident ident when cl#peek = (Lsymbol "(") ->
+    `Subcall (ident, (parse_exp_list cl))
+    (* methodCall *)
+  | Lident className when cl#peek = (Lsymbol ".") ->
+    cl#advance;
+    let subName = get_ident cl#next in
+    if cl#peek = (Lsymbol "(") then
+      `Methcall (className, subName, (parse_exp_list cl))
+    else
+    begin
+      lexeme_print cl#peek; raise (ParserError "but expecting (")
+    end
+  | _ as t -> lexeme_print t; raise (ParserError "Invalid subroutine call")
   ;;
 
 let check_terminal t v =
@@ -233,7 +240,10 @@ and parse_while_statement cl statements =
   check_terminal (Lsymbol "{") cl#next;
   [`Swhile (exp, (parse_sub_statements cl []))]
 
-and  parse_do_statement cl statements = statements
+and  parse_do_statement cl statements =
+  let subcall = parse_subroutine_call cl in
+  check_terminal (Lsymbol ";") cl#next; [`Sdo (subcall)]
+
 and  parse_return_statement cl statements = statements
 and  parse_sub_statements cl statements =
   match cl#next with
