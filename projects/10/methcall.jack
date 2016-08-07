@@ -1,0 +1,9 @@
+/* test */
+class Foo {
+      field char dummy;
+
+      function void foo(int foo)
+      {
+        let dummy = myclass.mymethod(3, 7+8);
+      }
+}

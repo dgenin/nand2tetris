@@ -1,0 +1,12 @@
+/* test */
+class Foo {
+      function void foo(int foo)
+      {
+        if (7 < 5){
+          let foo = 8;
+        } else
+        {
+          let after = 7;
+        }
+      }
+}

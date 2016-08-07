@@ -1,0 +1,9 @@
+/* test */
+class Foo {
+      static int x;
+
+      function void foo(int foo)
+      {
+        let bar = 3 + x - (7 + 2) - 5;
+      }
+}

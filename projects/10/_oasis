@@ -37,7 +37,50 @@ Executable jc
   BuildDepends: parser, lexer, atdgen
   Install: false
 
-Test test
-  Run$: flag(tests)
+Test class
+  Run: true
   Type: Custom (0.4)
-  Command: $jc test.jack
+  TestTools: jc
+  Command: $jc class.jack
+
+Test statement
+  Run: true
+  Type: Custom (0.4)
+  TestTools: jc
+  Command: $jc statement.jack
+
+Test parenthesis
+  Run: true
+  Type: Custom (0.4)
+  TestTools: jc
+  Command: $jc parenthesis.jack
+
+Test array
+  Run: true
+  Type: Custom (0.4)
+  TestTools: jc
+  Command: $jc array.jack
+
+Test subcall
+  Run: true
+  Type: Custom (0.4)
+  TestTools: jc
+  Command: $jc subcall.jack
+
+Test methcall
+  Run: true
+  Type: Custom (0.4)
+  TestTools: jc
+  Command: $jc methcall.jack
+
+Test ifelse
+  Run: true
+  Type: Custom (0.4)
+  TestTools: jc
+  Command: $jc while.jack
+
+Test while
+  Run: true
+  Type: Custom (0.4)
+  TestTools: jc
+  Command: $jc while.jack
