@@ -164,10 +164,9 @@ parse_expression cl =
     | None -> e
   )
   | _ as l -> print_endline (Yojson.Safe.prettify (Grammar_j.string_of_expression l)); raise (ParserError "Not supported yet")
-and
 
 (* Parse subroutine expression list *)
-parse_exp_list cl =
+and parse_exp_list cl =
   (* reads subroutine expression list, including the closing parenthesis *)
   let rec get_params cl exp_list =
     match cl#peek with
@@ -226,15 +225,14 @@ and parse_let_statement cl statements =
   | Lsymbol ";" -> statements
   | Lend -> raise (ParserError "Reached end of file in let\n")
   | _ as t -> lexeme_print t; raise (ParserError ("Bad"))
+
 and parse_while_statement cl statements =
-  match cl#next with
-    Lcomment _ -> parse_while_statement cl statements
-  | Lsymbol "{" -> print_string "while {"; (match cl#next with
-             Lcomment _ -> parse_let_statement cl statements
-           | Lsymbol "}" -> statements
-           | Lend -> raise (ParserError "Reached end of file in let\n")
-           | _ -> parse_sub_statements cl statements)
-  | _ -> parse_while_statement cl statements
+  check_terminal (Lsymbol "(") cl#next;
+  let exp = parse_expression cl in
+  check_terminal (Lsymbol ")") cl#next;
+  check_terminal (Lsymbol "{") cl#next;
+  [`Swhile (exp, (parse_sub_statements cl []))]
+
 and  parse_do_statement cl statements = statements
 and  parse_return_statement cl statements = statements
 and  parse_sub_statements cl statements =
