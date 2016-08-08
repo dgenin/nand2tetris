@@ -35,15 +35,13 @@ type expression = [
   | Esubcall of subroutine_call]
 (*  | Efunc_call of identifier * expression list;;*)
 
-type ret_val = [VAL of expression | None]
-
 type statement = [
   | Slist of statement list
   | Slet of (identifier * expression)
   | Sif of (expression * statement list * statement list)
   | Swhile of (expression * statement list)
   | Sdo of subroutine_call
-  | Sreturn of ret_val]
+  | Sreturn of expression option]
 
 type declaration = [
   | Dclass of (identifier * declaration list * declaration list)

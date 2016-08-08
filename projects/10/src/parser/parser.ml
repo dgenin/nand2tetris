@@ -152,7 +152,6 @@ parse_expression cl =
       Some bin_op ->  `Ebin_exp (e, bin_op, (parse_expression cl))
     | None -> e
   )
-  | _ as l -> print_endline (Yojson.Safe.prettify (Grammar_j.string_of_expression l)); raise (ParserError "Not supported yet")
 
 (* Parse subroutine expression list *)
 and parse_exp_list cl =
@@ -244,7 +243,15 @@ and  parse_do_statement cl statements =
   let subcall = parse_subroutine_call cl in
   check_terminal (Lsymbol ";") cl#next; [`Sdo (subcall)]
 
-and  parse_return_statement cl statements = statements
+and  parse_return_statement cl statements =
+  if cl#peek <> (Lsymbol ";") then
+  begin
+    let r = [`Sreturn (Some (parse_expression cl))] in
+    check_terminal (Lsymbol ";") cl#next;
+    r
+  end
+  else ( cl#advance; [`Sreturn (None)] )
+
 and  parse_sub_statements cl statements =
   match cl#next with
     Lkeyword "if" ->

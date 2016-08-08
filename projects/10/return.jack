@@ -1,0 +1,11 @@
+class Foo {
+      field char a;
+      function char foo()
+      {
+        return a;
+      }
+      function void bar()
+      {
+        return;
+      }
+}
