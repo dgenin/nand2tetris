@@ -77,10 +77,16 @@ Test ifelse
   Run: true
   Type: Custom (0.4)
   TestTools: jc
-  Command: $jc while.jack
+  Command: $jc ifelse.jack
 
 Test while
   Run: true
   Type: Custom (0.4)
   TestTools: jc
   Command: $jc while.jack
+
+Test return
+  Run: true
+  Type: Custom (0.4)
+  TestTools: jc
+  Command: $jc return.jack
