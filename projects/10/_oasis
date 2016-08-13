@@ -90,3 +90,9 @@ Test return
   Type: Custom (0.4)
   TestTools: jc
   Command: $jc return.jack
+
+Test comment
+  Run: true
+  Type: Custom (0.4)
+  TestTools: jc
+  Command: $jc comment.jack
