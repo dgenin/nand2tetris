@@ -4,7 +4,8 @@ let read_prog ch =
   let s = ref "" in
   try
     while true do
-      s := (!s ^ (input_line ch))
+      (* need to preserve newline for  comments: // *)
+      s := (!s ^ (input_line ch) ^ "\n")
     done;
     ""
   with

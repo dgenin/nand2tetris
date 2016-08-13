@@ -74,7 +74,7 @@ exception LexerError ;;
              let cs = cl.string.[cl.current]
              in match (c, cs) with
             | ('/', '/') -> forward cl;
-                    Lcomment (extract (fun st -> st.[0] <> '\r') cl)
+                    Lcomment (extract (fun st -> st.[0] <> '\n') cl)
             | ('/', '*') -> forward_n cl 2;
                        let res = (Lcomment (extract (fun st -> (String.compare (String.sub st 0 2) "*/") != 0) cl))
                        in forward_n cl 2; res
