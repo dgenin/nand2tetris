@@ -218,17 +218,23 @@ let rec parse_if_statement cl statements =
   end
 
 and parse_let_statement cl statements =
+  let parse_let_simple cl =
+    match cl#next with
+      Lop '=' -> let ex = (parse_expression cl) in
+        check_terminal (Lsymbol ";") cl#next; ex
+    | _ as t -> lexeme_print t; raise (ParserError " but expected =")
+  in
   match cl#next with
     Lcomment _ -> parse_let_statement cl statements
-  | Lident id -> (* add check that var is defined? *)
+  | Lident id when cl#peek <> (Lsymbol "[") -> (* add check that var is defined? *)
+     [`Slet (id, (parse_let_simple cl))]
+  | Lident id when cl#peek = (Lsymbol "[") ->
     (
-      match cl#next with
-        Lop '=' -> let tmp = [`Slet (id, (parse_expression cl))] in
-        check_terminal (Lsymbol ";") cl#next; tmp
-      | Lsymbol "[" -> raise (ParserError "arrays not implemented")
-      | _ as t -> lexeme_print t; raise (ParserError "not implemented")
+      cl#advance;
+      let index_ex = (parse_expression cl) in
+      check_terminal (Lsymbol "]") cl#next;
+      [`Slet_array (id, index_ex, (parse_let_simple cl))]
     )
-  | Lsymbol ";" -> statements
   | Lend -> raise (ParserError "Reached end of file in let\n")
   | _ as t -> lexeme_print t; raise (ParserError ("Bad"))
 

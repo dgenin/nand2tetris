@@ -38,6 +38,7 @@ type expression = [
 type statement = [
   | Slist of statement list
   | Slet of (identifier * expression)
+  | Slet_array of (identifier * expression * expression)
   | Sif of (expression * statement list * statement list)
   | Swhile of (expression * statement list)
   | Sdo of subroutine_call
