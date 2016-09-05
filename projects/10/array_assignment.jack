@@ -1,0 +1,10 @@
+/* test */
+class Foo {
+      static int x;
+
+      function void foo(int bar)
+      {
+        let x = bar[7+3];
+        let x[7+1] = 8;
+      }
+}

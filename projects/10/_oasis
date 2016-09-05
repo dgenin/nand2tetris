@@ -67,6 +67,12 @@ Test array
   TestTools: jc
   Command: $jc array.jack
 
+Test array_assignment
+  Run: true
+  Type: Custom (0.4)
+  TestTools: jc
+  Command: $jc array_assignment.jack
+
 Test subcall
   Run: true
   Type: Custom (0.4)
