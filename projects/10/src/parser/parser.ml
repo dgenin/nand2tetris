@@ -284,10 +284,11 @@ let rec parse_class_subs cl sub_defs =
   let string_to_funtype s =
     if s = "method" then `METHOD
     else if s = "function" then `FUNCTION
+    else if s = "constructor" then `CONSTRUCTOR
     else raise (ParserError ("Invalid function type" ^ s))
   in
   match cl#next with
-    Lkeyword k when k = "function" || k = "method" ->
+  | Lkeyword k when k = "function" || k = "method" || k = "constructor" ->
     let funtype = string_to_funtype k in
     let ret_type = get_type cl#next;  in
     let fun_name = get_ident cl#next in
@@ -295,12 +296,6 @@ let rec parse_class_subs cl sub_defs =
     let (fun_vars, fun_statements) = parse_sub_body cl in
     parse_class_subs cl
       (`Dsub (funtype, ret_type, fun_name, fun_params, fun_vars, fun_statements) :: sub_defs)
-  | Lkeyword "constructor" -> let ret_type = get_type cl#next in
-    let con_name = get_ident cl#next in
-    let con_params = parse_sub_params cl in
-    let con_vars = parse_sub_vars cl [] in
-    parse_class_subs cl
-      (`Dsub (`CONSTRUCTOR, ret_type, con_name, con_params, con_vars, []) :: sub_defs)
   | Lsymbol "}" -> sub_defs
   | _ as l -> print_endline "No match for:"; lexeme_print l; []
 ;;
