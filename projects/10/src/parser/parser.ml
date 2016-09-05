@@ -132,7 +132,7 @@ let rec parse_term cl =
     (* subroutineCall *)
   | Lident _ when cl#peek = (Lsymbol "(") || cl#peek = (Lsymbol ".") ->
     cl#rewind; `Esubcall (parse_subroutine_call cl)
-  | _ as t -> lexeme_print t; print_endline "not implemented yet"; `Estr_const "DEADBEEF"
+  | _ as t -> lexeme_print t; raise (ParserError "Syntax error in parse_term")
 and
 
 parse_expression cl =
