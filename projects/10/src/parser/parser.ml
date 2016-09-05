@@ -202,7 +202,7 @@ let check_terminal t v =
   ;;
 
 (* Parse subroutine statements *)
-let rec parse_if_statement cl statements =
+let rec parse_if_statement cl =
   check_terminal (Lsymbol "(") cl#next;
   let exp = parse_expression cl in
   check_terminal (Lsymbol ")") cl#next;
@@ -217,7 +217,7 @@ let rec parse_if_statement cl statements =
     [`Sif (exp, if_st, else_st)]
   end
 
-and parse_let_statement cl statements =
+and parse_let_statement cl =
   let parse_let_simple cl =
     match cl#next with
       Lop '=' -> let ex = (parse_expression cl) in
@@ -225,7 +225,7 @@ and parse_let_statement cl statements =
     | _ as t -> lexeme_print t; raise (ParserError " but expected =")
   in
   match cl#next with
-    Lcomment _ -> parse_let_statement cl statements
+    Lcomment _ -> parse_let_statement cl
   | Lident id when cl#peek <> (Lsymbol "[") -> (* add check that var is defined? *)
      [`Slet (id, (parse_let_simple cl))]
   | Lident id when cl#peek = (Lsymbol "[") ->
@@ -238,18 +238,18 @@ and parse_let_statement cl statements =
   | Lend -> raise (ParserError "Reached end of file in let\n")
   | _ as t -> lexeme_print t; raise (ParserError ("Bad"))
 
-and parse_while_statement cl statements =
+and parse_while_statement cl =
   check_terminal (Lsymbol "(") cl#next;
   let exp = parse_expression cl in
   check_terminal (Lsymbol ")") cl#next;
   check_terminal (Lsymbol "{") cl#next;
   [`Swhile (exp, (parse_sub_statements cl []))]
 
-and  parse_do_statement cl statements =
+and  parse_do_statement cl =
   let subcall = parse_subroutine_call cl in
   check_terminal (Lsymbol ";") cl#next; [`Sdo (subcall)]
 
-and  parse_return_statement cl statements =
+and  parse_return_statement cl =
   if cl#peek <> (Lsymbol ";") then
   begin
     let r = [`Sreturn (Some (parse_expression cl))] in
@@ -261,15 +261,15 @@ and  parse_return_statement cl statements =
 and  parse_sub_statements cl statements =
   match cl#next with
     Lkeyword "if" ->
-    parse_sub_statements cl (List.concat [statements; parse_if_statement cl statements])
+    parse_sub_statements cl (List.concat [statements; parse_if_statement cl])
   | Lkeyword "let" ->
-    parse_sub_statements cl ( List.concat [statements; parse_let_statement cl statements])
+    parse_sub_statements cl ( List.concat [statements; parse_let_statement cl])
   | Lkeyword "while" ->
-    parse_sub_statements cl ( List.concat [statements; parse_while_statement cl statements])
+    parse_sub_statements cl ( List.concat [statements; parse_while_statement cl])
   | Lkeyword "do" ->
-    parse_sub_statements cl ( List.concat [statements; parse_do_statement cl statements])
+    parse_sub_statements cl ( List.concat [statements; parse_do_statement cl])
   | Lkeyword "return" ->
-    parse_sub_statements cl ( List.concat [statements; parse_return_statement cl statements])
+    parse_sub_statements cl ( List.concat [statements; parse_return_statement cl])
   | Lsymbol "}" -> statements
   | Lend -> raise (ParserError "Missing } in function\n")
   | _ as t -> print_string "parse_sub_statements: "; lexeme_print t; []
