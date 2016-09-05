@@ -43,6 +43,12 @@ Test class
   TestTools: jc
   Command: $jc class.jack
 
+Test constructor
+  Run: true
+  Type: Custom (0.4)
+  TestTools: jc
+  Command: $jc constructor.jack
+
 Test statement
   Run: true
   Type: Custom (0.4)

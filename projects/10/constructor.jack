@@ -1,0 +1,11 @@
+class Foo {
+      field char u, v, w;
+
+      constructor Foo new(char a, char b, char c){
+          let u = a;
+          let v = b;
+          let w = c;
+          return this;
+      }
+}
+
