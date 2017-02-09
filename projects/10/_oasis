@@ -29,12 +29,18 @@ Library "parser"
   BuildDepends: lexer, yojson, atdgen
   Install: false
 
+Library "codegen"
+  Path: src/codegen
+  Modules: Codegen
+  BuildDepends: lexer, yojson, atdgen, batteries
+  Install: false
+
 Executable jc
   Path: src/jc
   MainIs: jc.ml
   Build$: flag(tests)
   CompiledObject: best
-  BuildDepends: parser, lexer, atdgen
+  BuildDepends: codegen, parser, lexer, atdgen
   Install: false
 
 Test class
