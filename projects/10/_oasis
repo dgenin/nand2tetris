@@ -35,12 +35,19 @@ Library "symtab"
   BuildDepends: lexer, yojson, atdgen, batteries
   Install: false
 
+Library "vmwriter"
+  Path: src/vmwriter
+  Modules: Vmwriter
+  BuildDepends: lexer, yojson, atdgen, batteries
+  Install: false
+
+
 Executable jc
   Path: src/jc
   MainIs: jc.ml
   Build$: flag(tests)
   CompiledObject: best
-  BuildDepends: symtab, parser, lexer, atdgen
+  BuildDepends: vmwriter, symtab, parser, lexer, atdgen
   Install: false
 
 Test class
