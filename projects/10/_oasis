@@ -29,9 +29,9 @@ Library "parser"
   BuildDepends: lexer, yojson, atdgen
   Install: false
 
-Library "codegen"
-  Path: src/codegen
-  Modules: Codegen
+Library "symtab"
+  Path: src/symtab
+  Modules: Symtab
   BuildDepends: lexer, yojson, atdgen, batteries
   Install: false
 
@@ -40,7 +40,7 @@ Executable jc
   MainIs: jc.ml
   Build$: flag(tests)
   CompiledObject: best
-  BuildDepends: codegen, parser, lexer, atdgen
+  BuildDepends: symtab, parser, lexer, atdgen
   Install: false
 
 Test class
