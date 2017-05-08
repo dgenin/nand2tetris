@@ -1,3 +1,5 @@
+open Printf
+
 type segment =
     | CONST
     | ARG
@@ -9,9 +11,21 @@ type segment =
     | TEMP
     ;;
 
+type command =
+    | ADD
+    | SUB
+    | NEG
+    | EQ
+    | GT
+    | LT
+    | AND
+    | OR
+    | NOT
+    ;;
+
 let seg2str = function 
-    | CONST -> "const"
-    | ARG -> "arg"
+    | CONST -> "constant"
+    | ARG -> "argument"
     | LOCAL -> "local"
     | STATIC -> "static"
     | THIS -> "this"
@@ -20,12 +34,55 @@ let seg2str = function
     | TEMP -> "temp"
 ;;
 
+let cmd2str = function
+    | ADD -> "add"
+    | SUB -> "sub"
+    | NEG -> "neg"
+    | EQ -> "eq"
+    | GT -> "gt"
+    | LT -> "lt"
+    | AND -> "and"
+    | OR -> "or"
+    | NOT -> "not"
+    ;;
+
 class vmwriter (fname:string) =
     let out_ch = open_out fname in
     object (s)
         val out = out_ch
         method write_push (seg:segment) (index:int) : unit = 
-           output_string out ("push " ^ (seg2str seg) ^ " " ^ (string_of_int index) ^ "\n")
+            output_string out ("\tpush " ^ (seg2str seg) ^ " " ^ (string_of_int index) ^ "\n")
         method write_pop (seg:segment) (index:int) : unit = 
-           output_string out ("pop " ^ (seg2str seg) ^ " " ^ (string_of_int index) ^ "\n")
+            output_string out ("\tpop " ^ (seg2str seg) ^ " " ^ (string_of_int index) ^ "\n")
+        method write_arithmetic (cmd:command) : unit = 
+            output_string out ("\t" ^ (cmd2str cmd) ^ "\n")
+        method write_label (label:string) : unit =
+            output_string out ("label " ^ (label) ^ "\n")
+        method write_goto (label:string) : unit =
+            output_string out ("\tgoto " ^ (label) ^ "\n")
+        method write_if (label:string) : unit =
+            output_string out ("\tif-goto " ^ (label) ^ "\n")
+        method write_call (func:string) (num_args:int) : unit =
+            output_string out (sprintf "\tcall %s %d\n" func num_args)
+        method write_function (func:string) (num_locs:int) : unit =
+            output_string out (sprintf "function %s %d\n" func num_locs)
+        method write_return : unit =
+            output_string out "\treturn\n"
+        method close : unit = close_out out
 end;;
+
+let test () = 
+    let vmw = new vmwriter "test.s" in
+    vmw#write_push THIS 2;
+    vmw#write_push ARG 1;
+    vmw#write_arithmetic ADD;
+    vmw#write_push ARG 0;
+    vmw#write_push ARG 1;
+    vmw#write_push CONST 5;
+    vmw#write_call "Math.multiply" 2;
+    vmw#write_call "BankAccount.commission" 2;
+    vmw#write_arithmetic SUB;
+    vmw#write_pop THIS 2;
+    vmw#write_return;;
+    
+    
