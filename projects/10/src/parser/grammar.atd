@@ -14,7 +14,7 @@ type const = [TRUE | FALSE | NULL | THIS]
 type identifier = string
 
 type var_type = [INT | CHAR | BOOLEAN | VOID | CLASS of identifier]
-type var_scope = [STATIC | FIELD]
+type var_scope = [STATIC | FIELD | ARG | VAR]
 type sub_type = [CONSTRUCTOR | FUNCTION | METHOD]
 
 type subroutine_call = [
