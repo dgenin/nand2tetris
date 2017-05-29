@@ -36,7 +36,7 @@ class symbol_table () =
                 else
                     BatHashtbl.enum subt
             in
-            let count_types (c, kind) ((_: Grammar.var_type), (v: (Grammar.identifier * Grammar.var_scope * int))) =
+            let count_types (c, kind) ((_: Grammar.identifier), (v: (Grammar.var_type * Grammar.var_scope * int))) =
                 match v with
                     | (_, tkind, _) when kind = tkind -> (c+1, kind)
                     | _ -> (c, kind)
