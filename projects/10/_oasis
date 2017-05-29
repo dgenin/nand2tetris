@@ -10,44 +10,20 @@ OASISFormat: 0.4
 BuildTools: ocamlbuild
 Plugins: META (0.4), DevFiles (0.4)
 
-PreBuildCommand: atdgen -j ./src/parser/grammar.atd; atdgen -t ./src/parser/grammar.atd
+#PreBuildCommand: atdgen -j ./src/grammar/grammar.atd; atdgen -t ./src/grammar/grammar.atd
 
 # Clean atdgen files
-PostCleanCommand: rm -f src/parser/grammar_*
+#PostCleanCommand: rm -f src/grammar/grammar_*
 
 # Enable testing
 PostConfCommand: sed -i.bak 's/tests=\"false\"/tests=\"true\"/' setup.data
 
-Library "lexer"
-  Path: src/lexer
-  Modules: Lexer
-  Install: false
-
-Library "parser"
-  Path: src/parser
-  Modules: Parser
-  BuildDepends: lexer, yojson, atdgen
-  Install: false
-
-Library "symtab"
-  Path: src/symtab
-  Modules: Symtab
-  BuildDepends: lexer, yojson, atdgen, batteries
-  Install: false
-
-Library "vmwriter"
-  Path: src/vmwriter
-  Modules: Vmwriter
-  BuildDepends: lexer, yojson, atdgen, batteries
-  Install: false
-
-
 Executable jc
-  Path: src/jc
+  Path: src
   MainIs: jc.ml
   Build$: flag(tests)
   CompiledObject: best
-  BuildDepends: vmwriter, symtab, parser, lexer, atdgen
+  BuildDepends: batteries, compeng, vmwriter, symtab, parser, atdgen
   Install: false
 
 Test class
