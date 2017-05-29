@@ -1,4 +1,4 @@
 B _build/**
 S src/**
-PKG yojson lexer parser batteries
+PKG yojson lexer parser vmwriter symtab compeng batteries
 FLG -w +a-4-40..42-44-45-48
