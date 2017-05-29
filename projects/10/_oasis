@@ -10,10 +10,10 @@ OASISFormat: 0.4
 BuildTools: ocamlbuild
 Plugins: META (0.4), DevFiles (0.4)
 
-#PreBuildCommand: atdgen -j ./src/grammar/grammar.atd; atdgen -t ./src/grammar/grammar.atd
+PreBuildCommand: atdgen -j ./src/grammar.atd; atdgen -t ./src/grammar.atd
 
 # Clean atdgen files
-#PostCleanCommand: rm -f src/grammar/grammar_*
+#PostCleanCommand: rm -f src/grammar_*
 
 # Enable testing
 PostConfCommand: sed -i.bak 's/tests=\"false\"/tests=\"true\"/' setup.data

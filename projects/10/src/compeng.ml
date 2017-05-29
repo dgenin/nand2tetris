@@ -74,7 +74,7 @@ class compeng (fname:string) =
 
 end;;
 
-let test() = 
+let test () =
   let ce = new compeng "test.jack" in
   ce#test ();;
         (*let vmw = new Vmwriter.vmwriter (class_name ^ ".vm") in*)

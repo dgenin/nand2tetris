@@ -1,6 +1,6 @@
 (*open Lexer;;*)
 
-(*let string_of_declaration = Grammar_j.string_of_declaration;;*)
+let string_of_declaration = Grammar_j.string_of_declaration;;
 
 exception ParserError of string;;
 
