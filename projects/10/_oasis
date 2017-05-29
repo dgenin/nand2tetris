@@ -23,7 +23,7 @@ Executable jc
   MainIs: jc.ml
   Build$: flag(tests)
   CompiledObject: best
-  BuildDepends: batteries, compeng, vmwriter, symtab, parser, atdgen
+  BuildDepends: batteries, atdgen
   Install: false
 
 Test class

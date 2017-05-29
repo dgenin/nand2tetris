@@ -1,6 +1,7 @@
 *.cmx
 *.cmi
 *.o
+*.s
 .vscode/
 *.native
 *.byte
