@@ -1,7 +1,7 @@
 (* Lexeme type *)
 type lexeme = Lint of int
         | Lkeyword of string
-        | Lident of string
+        | Lident of Grammar.identifier
         | Lsymbol of string
         | Lop of char
         | Lstring of string

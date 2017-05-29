@@ -46,10 +46,11 @@ let cmd2str = function
     | NOT -> "not"
     ;;
 
-class vmwriter (fname:string) =
-    let out_ch = open_out fname in
-    object (s)
-        val out = out_ch
+class vmwriter () =
+    object
+        val mutable out: out_channel = open_out "/dev/null" 
+        method init (fname:string) : unit  =
+            out <- (open_out fname)
         method write_push (seg:segment) (index:int) : unit = 
             output_string out ("\tpush " ^ (seg2str seg) ^ " " ^ (string_of_int index) ^ "\n")
         method write_pop (seg:segment) (index:int) : unit = 
@@ -68,11 +69,12 @@ class vmwriter (fname:string) =
             output_string out (sprintf "function %s %d\n" func num_locs)
         method write_return : unit =
             output_string out "\treturn\n"
-        method close : unit = close_out out
+        method close (): unit = close_out out
 end;;
 
 let test () = 
-    let vmw = new vmwriter "test.s" in
+    let vmw = new vmwriter () in
+    vmw#init "test.s"; 
     vmw#write_push THIS 2;
     vmw#write_push ARG 1;
     vmw#write_arithmetic ADD;
@@ -83,6 +85,7 @@ let test () =
     vmw#write_call "BankAccount.commission" 2;
     vmw#write_arithmetic SUB;
     vmw#write_pop THIS 2;
-    vmw#write_return;;
+    vmw#write_return;
+    vmw#close ();;
     
     

@@ -26,10 +26,11 @@ let prog =
   | _ -> raise (Invalid_argument ("Usage: " ^ Sys.argv.(0) ^ " infile"))
 in
 
-let l = new Lexer.lexeme_list prog in
+(*let l = new Lexer.lexeme_list prog in*)
 
 (* Parse program and print the resulting token list *)
-let dclasses = Parser.scanner l in
-  List.iter (fun c -> print_endline (Yojson.Safe.prettify (Parser.string_of_declaration c)); ()) dclasses;;
-(*Symtab.test ();;
-Vmwriter.test ();;*)
+(*let dclasses = Parser.scanner l in
+  List.iter (fun c -> print_endline (Yojson.Safe.prettify (Parser.string_of_declaration c)); ()) dclasses;;*)
+Symtab.test ();;
+(*Vmwriter.test ();;*)
+(*Compeng.test ();;*)
